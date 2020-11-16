@@ -2,12 +2,7 @@ package org.boncey.cdripper;
 
 import org.boncey.cdripper.model.CDInfo;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,7 +20,7 @@ public class MacOSRipper extends CDRipper
     /**
      * The command for getting CD info.
      */
-    private static final String CD_INFO_CMD = "cddb_query read";
+    private static final String CD_INFO_CMD = "cddb_query -s gnudb.gnudb.org -p 8880 read";
 
 
     /**
@@ -133,6 +128,7 @@ public class MacOSRipper extends CDRipper
         boolean artistMatched = false;
         boolean albumMatched = false;
         Runtime rt = Runtime.getRuntime();
+        System.out.println("Getting info: " + getInfoCommand());
         Process proc = rt.exec(getInfoCommand(), null, dir);
         Pattern albumPattern = Pattern.compile(ALBUM_PATTERN);
         Pattern artistPattern = Pattern.compile(ARTIST_PATTERN);
@@ -149,6 +145,7 @@ public class MacOSRipper extends CDRipper
         try (BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream())))
         {
             String line = in.readLine();
+            System.out.println(line);
 
             while (line != null)
             {

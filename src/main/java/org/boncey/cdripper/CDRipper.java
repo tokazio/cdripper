@@ -66,6 +66,7 @@ public abstract class CDRipper
             }
             else if (!cdInfo.recognised())
             {
+                System.out.println(cdInfo);
                 fail("Unable to recognise disk - provide a track listing file; aborting");
             }
 
@@ -104,37 +105,28 @@ public abstract class CDRipper
      * @throws IOException          if unable to interact with the cdparanoia process.
      * @throws InterruptedException if this thread is interrupted.
      */
-    private void rip(CDInfo cdInfo, File baseDir) throws IOException, InterruptedException
-    {
-
-        Runtime rt = Runtime.getRuntime();
+    private void rip(CDInfo cdInfo, File baseDir) throws IOException, InterruptedException {
         int index = 1;
-        for (Iterator<String> i = cdInfo.getTracks().iterator(); i.hasNext(); index++)
-        {
+        for (Iterator<String> i = cdInfo.getTracks().iterator(); i.hasNext(); index++) {
             String trackName = i.next();
             String indexStr = ((index < 10) ? "0" : "") + index;
             String filename = tidyFilename(indexStr + " - " + trackName + EXT);
             File wavFile = new File(baseDir, filename);
             File tempFile = File.createTempFile("wav", null, baseDir);
             System.out.println(String.format("Ripping %s (%s)", tempFile.getName(), wavFile.getName()));
-            String[] args = {getRipCommand(), "--quiet", String.valueOf(index), tempFile.getAbsolutePath()};
-            Process proc = rt.exec(args);
+            ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", String.valueOf(index), tempFile.getAbsolutePath());
+            pb.inheritIO();
+            Process proc = pb.start();
             proc.waitFor();
 
-            if (proc.exitValue() != 0)
-            {
+            if (proc.exitValue() != 0) {
                 System.err.println("Unable to rip " + tempFile);
-            }
-            else
-            {
-                if (!tempFile.renameTo(wavFile))
-                {
+            } else {
+                if (!tempFile.renameTo(wavFile)) {
                     System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
                 }
             }
         }
-
-        rt.exec(getEjectCommand());
     }
 
     /**
