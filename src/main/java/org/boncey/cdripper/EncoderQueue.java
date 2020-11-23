@@ -148,13 +148,11 @@ public class EncoderQueue
 
     /**
      * Clean up empty directories.
-     * 
+     *
      * @param baseDir
      * @param dryRun
-     * 
      */
-    private void cleanup(File baseDir, boolean dryRun)
-    {
+    public void cleanup(File baseDir, boolean dryRun) {
 
         _fileSystemCleaner.cleanup(baseDir, dryRun);
     }
@@ -218,11 +216,10 @@ public class EncoderQueue
 
     /**
      * Get the tracksEncoded.
-     * 
+     *
      * @return the tracksEncoded.
      */
-    private int getTracksEncoded()
-    {
+    public int getTracksEncoded() {
 
         return _tracksEncoded;
     }

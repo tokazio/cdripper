@@ -4,9 +4,6 @@ import org.boncey.cdripper.model.CDInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -18,14 +15,12 @@ import java.util.regex.Pattern;
  * @author Darren Greaves
  * @version $Id: CDRipper.java,v 1.8 2008-11-14 11:48:58 boncey Exp $
  */
-public abstract class CDRipper
-{
+public abstract class CDRipper {
 
     /**
      * The file extension for encoded files.
      */
     private static final String EXT = ".wav";
-
 
     /**
      * The temporary directory where we create the CD files.
@@ -36,8 +31,7 @@ public abstract class CDRipper
 
     private final List<String> _trackListing;
 
-    public CDRipper(File baseDir, List<String> trackListing)
-    {
+    public CDRipper(File baseDir, List<String> trackListing) {
         _baseDir = baseDir;
         _trackListing = trackListing;
     }
@@ -48,25 +42,18 @@ public abstract class CDRipper
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public void start() throws IOException, InterruptedException
-    {
+    public void start() throws IOException, InterruptedException, CDRipperException, CDInfoException {
         File tmpDir = new File(_baseDir, TEMP_DIR);
         boolean exists = tmpDir.exists() && !tmpDir.delete();
-
-        if (!exists)
-        {
-            tmpDir.mkdir();
-
+        if (!exists) {
+            tmpDir.mkdirs();
             CDInfo cdInfo = getCDInfo(tmpDir);
-            File dir;
+            System.out.println(cdInfo);
 
-            if (!cdInfo.recognised() && !_trackListing.isEmpty())
-            {
+            File dir;
+            if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
                 cdInfo.fromTrackListing(_trackListing);
-            }
-            else if (!cdInfo.recognised())
-            {
-                System.out.println(cdInfo);
+            } else if (!cdInfo.recognised()) {
                 fail("Unable to recognise disk - provide a track listing file; aborting");
             }
 
@@ -74,11 +61,9 @@ public abstract class CDRipper
             dir = new File(_baseDir, cdInfo.getDir());
             rip(cdInfo, tmpDir);
 
-            dir.mkdir();
+            dir.mkdirs();
             tmpDir.renameTo(dir);
-        }
-        else
-        {
+        } else {
             fail(String.format("%s exists; clean up required", tmpDir));
         }
     }
@@ -90,10 +75,9 @@ public abstract class CDRipper
      * @param message
      * @throws IOException
      */
-    private void fail(String message)
-    {
+    private void fail(String message) throws CDRipperException {
         System.err.println(message);
-        System.exit(-1);
+        throw new CDRipperException(message);
     }
 
 
@@ -135,8 +119,7 @@ public abstract class CDRipper
      * @param filename the filename to tidy.
      * @return the tidied filename.
      */
-    protected String tidyFilename(String filename)
-    {
+    protected String tidyFilename(String filename) {
 
         String ret;
 
@@ -158,44 +141,40 @@ public abstract class CDRipper
     protected abstract String getRipCommand();
 
     protected abstract CDInfo getCDInfo(File dir)
-            throws IOException, InterruptedException;
+            throws IOException, InterruptedException, CDInfoException;
 
     /**
      * Rip and encode the CD.
      *
      * @param args the base dir.
      */
-    public static void main(String[] args) throws Exception
-    {
+    /*
+    public static void main(String[] args) throws Exception {
 
-        if (args.length < 1)
-        {
+        if (args.length < 1) {
             System.err.println("Usage: CDRipper <base dir> [track names text file]");
             System.exit(-1);
         }
 
         File baseDir = new File(args[0]);
-        if (!baseDir.canRead() || !baseDir.isDirectory())
-        {
+        if (!baseDir.canRead() || !baseDir.isDirectory()) {
             System.err.printf("Unable to access %s as a directory%n", baseDir);
             System.exit(-1);
         }
 
         List<String> trackListing = Collections.EMPTY_LIST;
-        if (args.length > 1)
-        {
+        if (args.length > 1) {
             trackListing = Files.readAllLines(Paths.get(args[1]));
         }
 
-        try
-        {
+        try {
             // TODO Select based on OS
             CDRipper cdr = new MacOSRipper(baseDir, trackListing);
             cdr.start();
-        }
-        catch (Exception e)
-        {
+        } catch (CDRipperException e) {
             e.printStackTrace();
         }
     }
+
+     */
 }

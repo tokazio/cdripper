@@ -11,11 +11,11 @@ import java.util.regex.Pattern;
 /**
  * Class for ripping Audio CDs.
  * Copyright (c) 2000-2005 Darren Greaves.
+ *
  * @author Darren Greaves
  * @version $Id: CDRipper.java,v 1.8 2008-11-14 11:48:58 boncey Exp $
  */
-public class MacOSRipper extends CDRipper
-{
+public class MacOSRipper extends CDRipper {
 
     /**
      * The command for getting CD info.
@@ -37,9 +37,9 @@ public class MacOSRipper extends CDRipper
 
     /**
      * The pattern for parsing Album info.
-     *
+     * <p>
      * E.g.
-     *
+     * <p>
      * Title: Holy Fire
      */
     private static final String ALBUM_PATTERN = "Title:\\s+(.+)$";
@@ -47,9 +47,9 @@ public class MacOSRipper extends CDRipper
 
     /**
      * The pattern for parsing Artist info.
-     *
+     * <p>
      * E.g.
-     *
+     * <p>
      * Artist: Foals
      */
     private static final String ARTIST_PATTERN = "Artist:\\s+(.+)$";
@@ -57,7 +57,7 @@ public class MacOSRipper extends CDRipper
 
     /**
      * The pattern for parsing Track info.
-     *
+     * <p>
      * E.g. [01] 'Prelude' by Foals (4:07)
      */
     private static final String TRACK_PATTERN = "^\\s+\\[\\d+\\] '(.+)' by .+$";
@@ -65,7 +65,7 @@ public class MacOSRipper extends CDRipper
 
     /**
      * The pattern for counting how many Tracks.
-     *
+     * <p>
      * E.g. CD contains 14 track(s)
      */
     private static final String TRACK_COUNT_PATTERN = "^CD contains (\\d+) track\\(s\\)$";
@@ -85,31 +85,27 @@ public class MacOSRipper extends CDRipper
     /**
      * Public constructor.
      *
-     * @param baseDir the directory to create the CD directory within.
+     * @param baseDir      the directory to create the CD directory within.
      * @param trackListing
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public MacOSRipper(File baseDir, List<String> trackListing)
-    {
+    public MacOSRipper(File baseDir, List<String> trackListing) {
         super(baseDir, trackListing);
     }
 
     @Override
-    protected String getInfoCommand()
-    {
+    protected String getInfoCommand() {
         return CD_INFO_CMD;
     }
 
     @Override
-    protected String getEjectCommand()
-    {
+    protected String getEjectCommand() {
         return CD_EJECT_CMD;
     }
 
     @Override
-    protected String getRipCommand()
-    {
+    protected String getRipCommand() {
         return CD_RIP_CMD;
     }
 
@@ -118,12 +114,11 @@ public class MacOSRipper extends CDRipper
      *
      * @param dir the directory to create within.
      * @return a populated CD info object.
-     * @throws IOException if unable to interact with the cdda process.
+     * @throws IOException          if unable to interact with the cdda process.
      * @throws InterruptedException if this thread is interrupted.
      */
     @Override
-    protected CDInfo getCDInfo(File dir) throws IOException, InterruptedException
-    {
+    protected CDInfo getCDInfo(File dir) throws IOException, InterruptedException, CDInfoException {
 
         boolean artistMatched = false;
         boolean albumMatched = false;
@@ -142,30 +137,28 @@ public class MacOSRipper extends CDRipper
         boolean multiple = false;
         int trackCount = 0;
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream())))
-        {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
             String line = in.readLine();
-            System.out.println(line);
+            System.out.println(">" + line);
 
-            while (line != null)
-            {
+            if (line.startsWith("++ WARN: ")) {
+                throw new CDInfoException(line.replace("++ WARN: ", ""));
+            }
+
+            while (line != null) {
                 Matcher multiMatcher = multiPattern.matcher(line);
-                if (multiMatcher.matches())
-                {
+                if (multiMatcher.matches()) {
                     multiple = true;
                 }
 
                 Matcher chooseMatcher = choosePattern.matcher(line);
-                if (chooseMatcher.matches())
-                {
+                if (chooseMatcher.matches()) {
                     String input;
-                    try (BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in)))
-                    {
+                    try (BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in))) {
                         input = stdin.readLine();
                     }
 
-                    try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream())))
-                    {
+                    try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()))) {
                         out.write(input);
                     }
 
@@ -173,33 +166,28 @@ public class MacOSRipper extends CDRipper
                 }
 
                 Matcher albumMatcher = albumPattern.matcher(line);
-                if (albumMatcher.matches())
-                {
+                if (albumMatcher.matches()) {
                     album = albumMatcher.group(1);
                     albumMatched = true;
                 }
 
                 Matcher countMatcher = countPattern.matcher(line);
-                if (countMatcher.matches())
-                {
+                if (countMatcher.matches()) {
                     trackCount = Integer.parseInt(countMatcher.group(1));
                 }
 
                 Matcher artistMatcher = artistPattern.matcher(line);
-                if (artistMatcher.matches())
-                {
+                if (artistMatcher.matches()) {
                     artist = artistMatcher.group(1);
                     artistMatched = true;
                 }
 
                 Matcher trackMatcher = trackPattern.matcher(line);
-                if (trackMatcher.matches())
-                {
+                if (trackMatcher.matches()) {
                     tracks.add(trackMatcher.group(1));
                 }
 
-                if (multiple)
-                {
+                if (multiple) {
                     System.out.println(line);
                 }
 
@@ -208,16 +196,13 @@ public class MacOSRipper extends CDRipper
         }
 
         CDInfo cdInfo;
-        if (artistMatched && albumMatched)
-        {
+        if (artistMatched && albumMatched) {
             cdInfo = new CDInfo();
 
             cdInfo.setAlbum(tidyFilename(album));
             cdInfo.setArtist(tidyFilename(artist));
             cdInfo.setTracks(tracks);
-        }
-        else
-        {
+        } else {
             cdInfo = CDInfo.unknown(trackCount);
         }
 
