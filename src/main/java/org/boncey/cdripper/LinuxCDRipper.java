@@ -20,7 +20,7 @@ public class LinuxCDRipper extends CDRipper {
     /**
      * The command for getting CD info.
      */
-    private static final String CD_INFO_CMD = "cdda2wav -D /dev/cdrom -L 0 -J -v titles";
+    private static final String CD_INFO_CMD = "cdda2wav -D /dev/cdrom -cddbp-server=gnudb.gnudb.org -cddbp-port=8880 -L1 -J -v titles";
 
     /**
      * The command for getting CD info.
@@ -98,6 +98,7 @@ public class LinuxCDRipper extends CDRipper {
         boolean matched = false;
         CDInfo cdInfo = null;
         Runtime rt = Runtime.getRuntime();
+        System.out.println("Getting info: " + getInfoCommand());
         Process proc = rt.exec(CD_INFO_CMD, null, dir);
         Pattern albumPattern = Pattern.compile(ALBUM_PATTERN);
         Pattern trackPattern = Pattern.compile(TRACK_PATTERN);
