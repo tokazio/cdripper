@@ -20,7 +20,7 @@ public class LinuxCDRipper extends CDRipper {
     /**
      * The command for getting CD info.
      */
-    private static final String CD_INFO_CMD = "cdda2wav -L 0 -J -v titles";
+    private static final String CD_INFO_CMD = "cdda2wav -D /dev/cdrom -L 0 -J -v titles";
 
     /**
      * The command for getting CD info.
