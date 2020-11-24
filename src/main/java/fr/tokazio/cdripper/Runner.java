@@ -53,7 +53,7 @@ public class Runner {
 
     private static void rip() {
         try {
-            CDRipper cdr = new MacOSRipper(new File("ripped"), Collections.emptyList());
+            CDRipper cdr = new LinuxCDRipper(new File("ripped"), Collections.emptyList());
             cdr.start();
         } catch (Exception e) {
             e.printStackTrace();
