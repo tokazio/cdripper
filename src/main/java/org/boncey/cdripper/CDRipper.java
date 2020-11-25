@@ -109,8 +109,12 @@ public abstract class CDRipper {
                 if (!tempFile.renameTo(wavFile)) {
                     System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
                 } else {
+                    System.out.println("Done ripping " + wavFile.getAbsolutePath());
                     if (listener != null) {
+                        System.out.println("Listener.done...");
                         listener.done(wavFile);
+                    } else {
+                        System.out.println("No listener, go next...");
                     }
                 }
             }

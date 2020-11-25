@@ -94,6 +94,7 @@ public abstract class AbstractEncoder implements Encoder
                         if (!isDryRun())
                         {
                             _encoded.successfullyEncoded(wavFile);
+                            System.out.println("Encoded successfully: " + wavFile);
                         }
                     }
                     else
