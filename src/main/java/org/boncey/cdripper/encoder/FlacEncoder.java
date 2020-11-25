@@ -30,14 +30,13 @@ public class FlacEncoder extends AbstractEncoder
 
     /**
      * Public constructor.
-     * 
-     * @param encoded the class to notify once encoding is finished.
-     * @param location the location to save the files to.
+     *
+     * @param encoded    the class to notify once encoding is finished.
+     * @param toLocation the location to save the files to.
      */
-    public FlacEncoder(Encoded encoded, File location)
-    {
+    public FlacEncoder(Encoded encoded, File toLocation) {
 
-        super(encoded, location);
+        super(encoded, toLocation);
     }
 
     @Override

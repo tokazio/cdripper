@@ -22,7 +22,7 @@ public class Runner {
         try {
             CDRipper cdr = new LinuxCDRipper(new File("ripped"), Collections.emptyList());
             cdr.setListener(file -> {
-                Encoder encoder = new FlacEncoder(monitor, file);
+                Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
                 System.out.println("Encoding " + file.getName() + " to FLAC...");
                 executor.execute(encoder);
             });
