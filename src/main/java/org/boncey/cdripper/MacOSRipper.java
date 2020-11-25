@@ -118,7 +118,7 @@ public class MacOSRipper extends CDRipper {
      * @throws InterruptedException if this thread is interrupted.
      */
     @Override
-    protected CDInfo getCDInfo(File dir) throws IOException, InterruptedException, CDInfoException {
+    protected CDInfo getCDInfo(File dir) throws IOException, InterruptedException {
 
         boolean artistMatched = false;
         boolean albumMatched = false;
@@ -141,9 +141,6 @@ public class MacOSRipper extends CDRipper {
             String line = in.readLine();
             System.out.println(">" + line);
 
-            if (line.startsWith("++ WARN: ")) {
-                throw new CDInfoException(line.replace("++ WARN: ", ""));
-            }
 
             while (line != null) {
                 Matcher multiMatcher = multiPattern.matcher(line);

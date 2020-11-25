@@ -30,6 +30,7 @@ public abstract class CDRipper {
     private final File _baseDir;
 
     private final List<String> _trackListing;
+    private CDRipperListener listener;
 
     public CDRipper(File baseDir, List<String> trackListing) {
         _baseDir = baseDir;
@@ -42,7 +43,7 @@ public abstract class CDRipper {
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public void start() throws IOException, InterruptedException, CDRipperException, CDInfoException {
+    public void start() throws IOException, InterruptedException {
         File tmpDir = new File(_baseDir, TEMP_DIR);
         boolean exists = tmpDir.exists() && !tmpDir.delete();
         if (!exists) {
@@ -75,9 +76,8 @@ public abstract class CDRipper {
      * @param message
      * @throws IOException
      */
-    private void fail(String message) throws CDRipperException {
+    private void fail(String message) {
         System.err.println(message);
-        throw new CDRipperException(message);
     }
 
 
@@ -108,9 +108,18 @@ public abstract class CDRipper {
             } else {
                 if (!tempFile.renameTo(wavFile)) {
                     System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
+                } else {
+                    if (listener != null) {
+                        listener.done(wavFile);
+                    }
                 }
             }
         }
+    }
+
+    public CDRipper setListener(CDRipperListener listener) {
+        this.listener = listener;
+        return this;
     }
 
     /**
@@ -141,7 +150,7 @@ public abstract class CDRipper {
     protected abstract String getRipCommand();
 
     protected abstract CDInfo getCDInfo(File dir)
-            throws IOException, InterruptedException, CDInfoException;
+            throws IOException, InterruptedException;
 
     /**
      * Rip and encode the CD.

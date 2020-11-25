@@ -1,23 +1,38 @@
 package fr.tokazio.cdripper;
 
-import org.boncey.cdripper.*;
+import org.boncey.cdripper.CDRipper;
+import org.boncey.cdripper.Encoded;
+import org.boncey.cdripper.FileDeletingTrackMonitor;
+import org.boncey.cdripper.LinuxCDRipper;
 import org.boncey.cdripper.encoder.Encoder;
+import org.boncey.cdripper.encoder.FlacEncoder;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Runner {
 
+    static ExecutorService executor = Executors.newFixedThreadPool(2);
+
+    static Encoded monitor = new FileDeletingTrackMonitor();
+
     public static void main(String[] args) {
-        rip();
-        encode();
+        try {
+            CDRipper cdr = new LinuxCDRipper(new File("ripped"), Collections.emptyList());
+            cdr.setListener(file -> {
+                Encoder encoder = new FlacEncoder(monitor, file);
+                executor.execute(encoder);
+            });
+            cdr.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private static void encode() {
+    /*
+    private static void encodeAll() {
         try {
             File props = new File("encoders.properties");
             File baseDir = new File("ripped");
@@ -50,14 +65,7 @@ public class Runner {
         }
         return executor;
     }
+    */
 
-    private static void rip() {
-        try {
-            CDRipper cdr = new LinuxCDRipper(new File("ripped"), Collections.emptyList());
-            cdr.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
 }

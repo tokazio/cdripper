@@ -94,7 +94,7 @@ public class LinuxCDRipper extends CDRipper {
      */
     @Override
     protected CDInfo getCDInfo(File dir)
-            throws IOException, InterruptedException, CDInfoException {
+            throws IOException, InterruptedException {
         boolean matched = false;
         CDInfo cdInfo = null;
         Runtime rt = Runtime.getRuntime();
@@ -113,10 +113,6 @@ public class LinuxCDRipper extends CDRipper {
                 new InputStreamReader(proc.getErrorStream()))) {
             String line = in.readLine();
             System.out.println(">" + line);
-
-            if (line.startsWith("++ WARN: ")) {
-                throw new CDInfoException(line.replace("++ WARN: ", ""));
-            }
 
             while (line != null) {
                 Matcher multiMatcher = multiPattern.matcher(line);
