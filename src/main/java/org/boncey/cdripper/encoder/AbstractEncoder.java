@@ -70,6 +70,10 @@ public abstract class AbstractEncoder implements Encoder
         _encoded = encoded;
         _location = location;
 
+        if (!_location.exists()) {
+            _location.mkdirs();
+        }
+
         // Use Vector as it's 'synchronized'.
         _tracks = new Vector<Track>();
     }
@@ -80,7 +84,6 @@ public abstract class AbstractEncoder implements Encoder
      */
     public void run()
     {
-
         try
         {
             while (_alive || _tracks.size() > 0)
@@ -89,6 +92,7 @@ public abstract class AbstractEncoder implements Encoder
                 {
                     Track track = _tracks.remove(0);
                     File wavFile = track.getWavFile();
+                    System.out.println("Encoding " + wavFile.getName() + " to " + getExt() + " in " + _location.getAbsolutePath());
                     if (encode(track))
                     {
                         if (!isDryRun())
