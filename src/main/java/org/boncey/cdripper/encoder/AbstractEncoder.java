@@ -25,7 +25,7 @@ public abstract class AbstractEncoder implements Encoder
     /**
      * How long to sleep for when waiting for encoding to finish.
      */
-    private static final int WAIT = 1000;
+    private static final int WAIT = 10000;
 
 
     /**

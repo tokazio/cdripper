@@ -6,6 +6,7 @@ import org.boncey.cdripper.FileDeletingTrackMonitor;
 import org.boncey.cdripper.LinuxCDRipper;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
+import org.boncey.cdripper.model.Track;
 
 import java.io.File;
 import java.util.Collections;
@@ -20,9 +21,12 @@ public class Runner {
 
     public static void main(String[] args) {
         try {
-            CDRipper cdr = new LinuxCDRipper(new File("ripped"), Collections.emptyList());
+            File baseDir = new File("ripped");
+            CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
             cdr.setListener(file -> {
                 Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
+                Track track = Track.createTrack(file, baseDir, "flac");
+                encoder.queue(track, false);
                 System.out.println("Will encode " + file.getName() + " to FLAC...");
                 executor.execute(encoder);
             });
