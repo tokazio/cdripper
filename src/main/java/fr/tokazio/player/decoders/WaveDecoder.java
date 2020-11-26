@@ -13,6 +13,7 @@ import java.io.IOException;
 public class WaveDecoder implements Decoder {
 
     private WavInputStream wavInputStream;
+    private boolean stopped;
 
     @Override
     public void load(File file) throws IOException {
@@ -36,12 +37,12 @@ public class WaveDecoder implements Decoder {
             int r = wavInputStream.read(playBuffer, 0, playBuffer.length);
             System.out.println("> " + r);
             line.write(playBuffer, 0, r);
-        } while (true);
+        } while (!stopped);
     }
 
     @Override
     public void stop() throws IOException {
-
+        stopped = true;
     }
 
     @Override

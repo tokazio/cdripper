@@ -15,7 +15,7 @@ import java.io.IOException;
 
 public class FlacDecoder implements Decoder, PCMProcessor {
 
-    private FLACDecoder decoder = new FLACDecoder();
+    private final FLACDecoder decoder = new FLACDecoder();
     private SourceDataLine line;
     private AudioMeter meter;
 

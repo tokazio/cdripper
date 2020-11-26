@@ -18,6 +18,7 @@ public class DsdOverPCMDecoder implements Decoder {
     long sampleCount = 0;
 
     int[][] samples = new int[2][2048];
+    private boolean stopped;
 
     @Override
     public void load(File file) throws IOException {
@@ -81,12 +82,13 @@ public class DsdOverPCMDecoder implements Decoder {
                 decoder.seek((long) decoder.getSampleRate() * (testSeek));
                 testSeek = 0;
             }
-        } while (true);
+        } while (!stopped);
 
     }
 
     @Override
     public void stop() throws IOException {
+        stopped = true;
         try {
             decoder.suspend();
         } catch (org.justcodecs.dsd.Decoder.DecodeException e) {
@@ -105,7 +107,7 @@ public class DsdOverPCMDecoder implements Decoder {
     private org.justcodecs.dsd.Decoder.PCMFormat pcmFormat() {
         //System.out.printf("Samples %d duration %ds%n",  decoder.getSampleCount(), decoder.getSampleCount()/decoder.getSampleRate());
         org.justcodecs.dsd.Decoder.PCMFormat pcmf = new org.justcodecs.dsd.Decoder.PCMFormat();
-        pcmf.sampleRate = 44100;// * 2 * 2;
+        pcmf.sampleRate = 44100 * 2 * 2;
         pcmf.bitsPerSample = 16;
         //System.out.printf("clip: %x %x  %x-%x%n",((1 << pcmf.bitsPerSample) - 1) >> 1, 1 << pcmf.bitsPerSample, Short.MAX_VALUE, Short.MIN_VALUE);
         pcmf.channels = 2;

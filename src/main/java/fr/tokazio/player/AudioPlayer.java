@@ -77,6 +77,7 @@ public class AudioPlayer extends Thread {
             line = AudioSystem.getSourceDataLine(fmt, AudioSystem.getMixerInfo()[MIXERID]);
             // try {
             line.open(fmt);
+
             doVol();
             line.start();
             //  } catch (LineUnavailableException ex) {
