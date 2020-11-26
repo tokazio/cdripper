@@ -1,6 +1,5 @@
 package fr.tokazio;
 
-import fr.tokazio.player.PlayerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @Path("/player")
@@ -28,9 +28,13 @@ public class PlayerResource {
 
     @Path("play")
     @POST
-    public void play(PlayRequestData req) throws IOException {
+    public void play(PlayRequestData req) throws IOException, PlayerException {
         LOGGER.info("[REQ] play " + req.getFile());
-        service.play(req.getFile());
+        try {
+            service.play(req.getFile());
+        } catch (FileNotFoundException ex) {
+            throw new PlayerException(ResponseCode.NOT_FOUND, ex);
+        }
     }
 
     @Path("stop")

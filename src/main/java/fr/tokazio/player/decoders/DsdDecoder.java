@@ -153,7 +153,7 @@ public class DsdDecoder implements Decoder {
     @Override
     public AudioFormat getAudioFormat() {
 
-        return new AudioFormat(new AudioFormat.Encoding("DSD_UNSIGNED"),
+        return new AudioFormat(new AudioFormat.Encoding("PCM_UNSIGNED"),
                 dsd.getSampleRate(), 1, dsd.getNumChannels(), 4, dsd.getSampleRate() / 32,
                 true);
 

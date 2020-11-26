@@ -1,5 +1,9 @@
-package fr.tokazio.player;
+package fr.tokazio;
 
+import fr.tokazio.player.AudioFormat;
+import fr.tokazio.player.AudioPlayer;
+import fr.tokazio.player.Decoder;
+import fr.tokazio.player.VolumeInfo;
 import fr.tokazio.player.decoders.DsdDecoder;
 import fr.tokazio.player.decoders.FlacDecoder;
 import org.jflac.PlayerState;
@@ -15,7 +19,7 @@ public class PlayerService {
 
     public void play(final String filename) throws IOException {
         stop();
-        player = new AudioPlayer(2, getDecoder(filename))
+        player = new AudioPlayer(6, getDecoder(filename))
                 .load(new File(filename))
                 .play();
     }
