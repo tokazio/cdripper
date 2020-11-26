@@ -153,7 +153,7 @@ public class DsdDecoder implements Decoder {
     @Override
     public AudioFormat getAudioFormat() {
 
-        return new AudioFormat(new AudioFormat.Encoding("PCM_UNSIGNED"),
+        return new AudioFormat(new AudioFormat.Encoding("DSD_UNSIGNED"),
                 dsd.getSampleRate(), 1, dsd.getNumChannels(), 4, dsd.getSampleRate() / 32,
                 true);
 
@@ -169,19 +169,4 @@ public class DsdDecoder implements Decoder {
 
     }
 
-    /*
-    protected SourceDataLine getDSDLine(DSDFormat<?> dsd) {
-        try {
-            return AudioSystem.getSourceDataLine(new AudioFormat(new AudioFormat.Encoding("DSD_UNSIGNED"),
-                    dsd.getSampleRate(), 1, dsd.getNumChannels(), 4, dsd.getSampleRate()/32,
-                    true));
-        } catch (IllegalArgumentException e) {
-            System.out.printf("No DSD %s%n", e);
-        } catch (LineUnavailableException e) {
-            System.out.printf("No DSD %s%n", e);
-        }
-        return null;
-    }
-
-     */
 }

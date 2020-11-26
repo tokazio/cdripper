@@ -65,7 +65,7 @@ public class AudioPlayer extends Thread {
         LOGGER.info("[END] pauseORresume: state is " + state);
     }
 
-    public AudioPlayer play() {
+    public AudioPlayer play() throws AudioFormatNotHandled {
         LOGGER.info("[BEGIN] play '" + filename + "': state is " + state);
         if (!state.equals(STOPPED)) {
             throw new RuntimeException("Allready playing?!");
@@ -73,14 +73,15 @@ public class AudioPlayer extends Thread {
 
         try {
             fmt = decoder.getAudioFormat();
+            LOGGER.info("Getting audio line on mixer #" + MIXERID + " (" + AudioSystem.getMixerInfo()[MIXERID].getName() + ") for " + fmt + "...");
             line = AudioSystem.getSourceDataLine(fmt, AudioSystem.getMixerInfo()[MIXERID]);
-            try {
-                line.open(fmt);
-                doVol();
-                line.start();
-            } catch (LineUnavailableException ex) {
-                LOGGER.error("Error opening line for " + fmt + " on mixer " + AudioSystem.getMixerInfo()[MIXERID], ex);
-            }
+            // try {
+            line.open(fmt);
+            doVol();
+            line.start();
+            //  } catch (LineUnavailableException ex) {
+            // LOGGER.error("Error opening line for " + fmt + " on mixer " + AudioSystem.getMixerInfo()[MIXERID], ex);
+            //  }
             decoder.onEnd(onEnd);
             state = PlayerState.PLAYING;
             //onPlay();
@@ -88,8 +89,8 @@ public class AudioPlayer extends Thread {
 
             start();
             //return filename + " " + fmt.toString();
-        } catch (LineUnavailableException ex) {
-            LOGGER.error("No line for " + fmt, ex);
+        } catch (LineUnavailableException | IllegalArgumentException ex) {
+            throw new AudioFormatNotHandled(fmt, AudioSystem.getMixerInfo()[MIXERID], ex);
         }
         return this;
     }
@@ -158,10 +159,6 @@ public class AudioPlayer extends Thread {
         }
         return this;
     }
-
-    //min=-80.0, max=6.0206
-    //86.0206 * 0.1 = 8.6
-    //
 
     private void doVol() {
         if (line != null) {

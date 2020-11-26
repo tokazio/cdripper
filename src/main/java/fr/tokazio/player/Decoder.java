@@ -3,6 +3,7 @@ package fr.tokazio.player;
 import org.jflac.PCMProcessor;
 
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +20,7 @@ public interface Decoder {
 
     void stop() throws IOException;
 
-    AudioFormat getAudioFormat();
+    AudioFormat getAudioFormat() throws LineUnavailableException;
 
     void onEnd(Callback callback);
 

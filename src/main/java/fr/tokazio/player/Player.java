@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class Player {
 
-    public static void main(String[] args) throws IOException, InterruptedException, LineUnavailableException {
+    public static void main(String[] args) throws IOException, AudioFormatNotHandled, LineUnavailableException {
 
         new Devices().list();
 

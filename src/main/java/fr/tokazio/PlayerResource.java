@@ -1,5 +1,6 @@
 package fr.tokazio;
 
+import fr.tokazio.player.AudioFormatNotHandled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class PlayerResource {
         LOGGER.info("[REQ] play " + req.getFile());
         try {
             service.play(req.getFile());
-        } catch (FileNotFoundException ex) {
+        } catch (AudioFormatNotHandled | FileNotFoundException ex) {
             throw new PlayerException(ResponseCode.NOT_FOUND, ex);
         }
     }

@@ -1,35 +1,48 @@
 package fr.tokazio;
 
-import fr.tokazio.player.AudioFormat;
-import fr.tokazio.player.AudioPlayer;
-import fr.tokazio.player.Decoder;
-import fr.tokazio.player.VolumeInfo;
-import fr.tokazio.player.decoders.DsdDecoder;
+import fr.tokazio.player.*;
+import fr.tokazio.player.decoders.DsdOverPCMDecoder;
 import fr.tokazio.player.decoders.FlacDecoder;
+import fr.tokazio.player.decoders.WaveDecoder;
 import org.jflac.PlayerState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @ApplicationScoped
 public class PlayerService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerService.class);
+
     private AudioPlayer player;
 
-    public void play(final String filename) throws IOException {
+    public void play(final String filename) throws IOException, AudioFormatNotHandled {
         stop();
-        player = new AudioPlayer(6, getDecoder(filename))
-                .load(new File(filename))
+        File file = new File(filename);
+        if (!file.exists()) {
+            throw new FileNotFoundException("File " + file.getAbsolutePath() + " not found");
+        }
+        player = new AudioPlayer(2, getDecoder(file.getName()))
+                .load(file)
                 .play();
     }
 
     private Decoder getDecoder(final String filename) throws IOException {
         if (filename.endsWith(".flac")) {
+            LOGGER.info("Using FLAC decoder");
             return new FlacDecoder();
         }
         if (filename.endsWith(".dsf")) {
-            return new DsdDecoder();
+            LOGGER.info("Using DSD decoder");
+            return new DsdOverPCMDecoder();
+        }
+        if (filename.endsWith(".wav")) {
+            LOGGER.info("Using WAVE decoder");
+            return new WaveDecoder();
         }
         throw new IOException("Can't handle " + filename + " format (only flac or dsf)");
     }
