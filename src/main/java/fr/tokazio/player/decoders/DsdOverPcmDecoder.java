@@ -10,7 +10,7 @@ import javax.sound.sampled.SourceDataLine;
 import java.io.File;
 import java.io.IOException;
 
-public class DsdOverPCMDecoder implements Decoder {
+public class DsdOverPcmDecoder implements Decoder {
 
     org.justcodecs.dsd.Decoder decoder;
 

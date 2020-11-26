@@ -1,7 +1,7 @@
 package fr.tokazio;
 
 import fr.tokazio.player.*;
-import fr.tokazio.player.decoders.DsdDecoder;
+import fr.tokazio.player.decoders.DsdOverPcmDecoder;
 import fr.tokazio.player.decoders.FlacDecoder;
 import fr.tokazio.player.decoders.WaveDecoder;
 import org.jflac.PlayerState;
@@ -38,7 +38,7 @@ public class PlayerService {
         }
         if (filename.endsWith(".dsf")) {
             LOGGER.info("Using DSD decoder");
-            return new DsdDecoder();
+            return new DsdOverPcmDecoder();
         }
         if (filename.endsWith(".wav")) {
             LOGGER.info("Using WAVE decoder");
