@@ -5,3 +5,7 @@ depcache
 *.iml
 target
 deploy.sh
+/.gradle/
+/build/
+/encoded/
+/*.png

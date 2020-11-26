@@ -1,0 +1,42 @@
+plugins {
+    id 'idea'
+    id 'java'
+    id 'io.quarkus'
+}
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-resteasy'
+    implementation 'io.quarkus:quarkus-resteasy-jackson'
+    implementation 'io.quarkus:quarkus-undertow-websockets'
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation 'io.quarkus:quarkus-junit5-mockito'
+    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.18.0'
+}
+
+group 'fr.tokazio'
+version '1.0-SNAPSHOT'
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+}
