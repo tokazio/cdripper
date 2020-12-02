@@ -1,6 +1,5 @@
 package fr.tokazio.ripper;
 
-import fr.tokazio.FolderService;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
@@ -23,21 +22,12 @@ public class RipperService {
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final Encoded monitor = new FileDeletingTrackMonitor();
 
-    private volatile boolean ripping;
+    private boolean ripping;
 
     public synchronized void rip() throws IOException, InterruptedException, RipException {
         if (!ripping) {
             ripping = true;
-
-            File cdrom = new File("/dev/cdrom");
-
-            while (!cdrom.exists()) {
-                LOGGER.warn(cdrom + " not extists...");
-                Thread.sleep(10000);
-            }
-
-
-            final File baseDir = new File(FolderService.ROOT);
+            final File baseDir = new File("./");//FolderService.ROOT);
             final CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
             cdr.setTrackRippedListener(file -> {
                 Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
