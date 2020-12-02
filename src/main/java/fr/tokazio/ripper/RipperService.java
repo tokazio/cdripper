@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class RipperService {
@@ -22,9 +23,9 @@ public class RipperService {
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final Encoded monitor = new FileDeletingTrackMonitor();
 
-    private boolean ripping;
+    private volatile boolean ripping;
 
-    public synchronized void rip() throws IOException, InterruptedException, RipException {
+    public void rip() throws IOException, InterruptedException, RipException {
         if (!ripping) {
             ripping = true;
             final File baseDir = new File("./");//FolderService.ROOT);
@@ -35,6 +36,13 @@ public class RipperService {
                 encoder.queue(track, false);
                 LOGGER.info("Will encode " + file.getName() + " to FLAC...");
                 executor.execute(encoder);
+            });
+            cdr.setEndListener(new Function() {
+                @Override
+                public Object apply(Object o) {
+                    ripping = false;
+                    return null;
+                }
             });
             tentative(cdr, 1);
         }

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,12 +26,13 @@ public abstract class CDRipper {
     /**
      * The temporary directory where we create the CD files.
      */
-    private static final String TEMP_DIR = "TempDir";
+    private static final String TEMP_DIR = "TempDir";//TODO <- timestamp ou rm
 
     private final File _baseDir;
 
     private final List<String> _trackListing;
     private CDRipperListener trackRippedlistener;
+    private Function endListener;
 
     public CDRipper(File baseDir, List<String> trackListing) {
         _baseDir = baseDir;
@@ -130,10 +132,18 @@ public abstract class CDRipper {
                 }
             }
         }
+        if (endListener != null) {
+            endListener.apply(null);
+        }
     }
 
     public CDRipper setTrackRippedListener(CDRipperListener listener) {
         this.trackRippedlistener = listener;
+        return this;
+    }
+
+    public CDRipper setEndListener(Function listener) {
+        this.endListener = listener;
         return this;
     }
 
