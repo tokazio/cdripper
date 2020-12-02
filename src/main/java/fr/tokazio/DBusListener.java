@@ -3,6 +3,8 @@ package fr.tokazio;
 import fr.tokazio.ripper.RipperService;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import org.boncey.cdripper.CdInfoException;
+import org.boncey.cdripper.RipException;
 import org.freedesktop.dbus.DBusMatchRule;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.exceptions.DBusException;
@@ -34,10 +36,11 @@ public class DBusListener {
 
                 @Override
                 public void handle(DBusSignal s) {
+                    LOGGER.info("DBus signal name: " + s.getName() + ", path: " + s.getPath() + ", source: " + s.getSource());
                     LOGGER.info("A disc was inserted, ripping it...");
                     try {
                         ripperService.rip();
-                    } catch (IOException | InterruptedException e) {
+                    } catch (IOException | InterruptedException | RipException | CdInfoException e) {
                         LOGGER.error("Error ripping/encoding", e);
                     }
                 }

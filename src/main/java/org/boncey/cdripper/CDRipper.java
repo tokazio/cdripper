@@ -43,27 +43,38 @@ public abstract class CDRipper {
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public void start() throws IOException, InterruptedException {
+    public void start() throws CdInfoException, RipException {
         File tmpDir = new File(_baseDir, TEMP_DIR);
         boolean exists = tmpDir.exists() && !tmpDir.delete();
         if (!exists) {
             tmpDir.mkdirs();
-            CDInfo cdInfo = getCDInfo(tmpDir);
-            System.out.println(cdInfo);
 
-            File dir;
-            if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
-                cdInfo.fromTrackListing(_trackListing);
-            } else if (!cdInfo.recognised()) {
-                fail("Unable to recognise disk - provide a track listing file; aborting");
+            CDInfo cdInfo;
+            try {
+                cdInfo = getCDInfo(tmpDir);
+                System.out.println(cdInfo);
+            } catch (IOException | InterruptedException ex) {
+                throw new CdInfoException(ex);
             }
 
-            System.out.println(String.format("%s by %s", cdInfo.getAlbum(), cdInfo.getArtist()));
-            dir = new File(_baseDir, cdInfo.getDir());
-            rip(cdInfo, tmpDir);
+            if (cdInfo != null) {
+                File dir;
+                if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
+                    cdInfo.fromTrackListing(_trackListing);
+                } else if (!cdInfo.recognised()) {
+                    fail("Unable to recognise disk - provide a track listing file; aborting");
+                }
 
-            dir.mkdirs();
-            tmpDir.renameTo(dir);
+                System.out.println(String.format("%s by %s", cdInfo.getAlbum(), cdInfo.getArtist()));
+                dir = new File(_baseDir, cdInfo.getDir());
+                try {
+                    rip(cdInfo, tmpDir);
+                    dir.mkdirs();
+                    tmpDir.renameTo(dir);
+                } catch (IOException | InterruptedException e) {
+                    throw new RipException(e);
+                }
+            }
         } else {
             fail(String.format("%s exists; clean up required", tmpDir));
         }
@@ -149,7 +160,7 @@ public abstract class CDRipper {
 
     protected abstract String getInfoCommand();
 
-    protected abstract String getEjectCommand();
+    public abstract String getEjectCommand();
 
     protected abstract String getRipCommand();
 

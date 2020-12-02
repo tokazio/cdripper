@@ -1,10 +1,7 @@
 package fr.tokazio.ripper;
 
 import fr.tokazio.FolderService;
-import org.boncey.cdripper.CDRipper;
-import org.boncey.cdripper.Encoded;
-import org.boncey.cdripper.FileDeletingTrackMonitor;
-import org.boncey.cdripper.LinuxCDRipper;
+import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
 import org.boncey.cdripper.model.Track;
@@ -22,10 +19,11 @@ public class RipperService {
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final Encoded monitor = new FileDeletingTrackMonitor();
 
-    private boolean ripping;
+    private volatile boolean ripping;
 
-    public void rip() throws IOException, InterruptedException {
+    public void rip() throws IOException, InterruptedException, RipException, CdInfoException {
         if (!ripping) {
+            ripping = true;
             final File baseDir = new File(FolderService.ROOT);
             final CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
             cdr.setTrackRippedListener(file -> {
@@ -35,8 +33,23 @@ public class RipperService {
                 System.out.println("Will encode " + file.getName() + " to FLAC...");
                 executor.execute(encoder);
             });
+            tentative(cdr, 1);
+        }
+    }
+
+    private void tentative(CDRipper cdr, int nb) throws RipException, InterruptedException, IOException {
+        if (nb >= 5) {
+            Runtime rt = Runtime.getRuntime();
+            System.out.println("Ejecting: " + cdr.getEjectCommand());
+            Process proc = rt.exec(cdr.getEjectCommand(), null);
+            proc.waitFor();
+            return;
+        }
+        Thread.sleep(2000);
+        try {
             cdr.start();
-            ripping = true;
+        } catch (CdInfoException ex) {
+            tentative(cdr, nb + 1);
         }
     }
 }

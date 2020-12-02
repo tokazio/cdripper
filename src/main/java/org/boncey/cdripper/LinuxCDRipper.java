@@ -75,7 +75,7 @@ public class LinuxCDRipper extends CDRipper {
     }
 
     @Override
-    protected String getEjectCommand() {
+    public String getEjectCommand() {
         return CD_EJECT_CMD;
     }
 
