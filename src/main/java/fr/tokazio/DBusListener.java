@@ -24,7 +24,7 @@ public class DBusListener {
         try {
             DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
 
-            conn.addGenericSigHandler(new DBusMatchRule("org.freedesktop.dbus.messages.DBusSignal", "org.freedesktop.systemd1.Manager", "UnitNew"), new DBusSigHandler() {
+            conn.addGenericSigHandler(new DBusMatchRule("signal", "org.freedesktop.systemd1.Manager", "UnitNew"), new DBusSigHandler() {
 
                 @Override
                 public void handle(DBusSignal s) {
