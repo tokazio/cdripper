@@ -19,20 +19,24 @@ import java.util.concurrent.Executors;
 @ApplicationScoped
 public class RipperService {
 
-    static ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final Encoded monitor = new FileDeletingTrackMonitor();
 
-    static Encoded monitor = new FileDeletingTrackMonitor();
+    private boolean ripping;
 
     public void rip() throws IOException, InterruptedException {
-        File baseDir = new File(FolderService.ROOT);
-        CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
-        cdr.setTrackRippedListener(file -> {
-            Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
-            Track track = Track.createTrack(file, baseDir, "flac");
-            encoder.queue(track, false);
-            System.out.println("Will encode " + file.getName() + " to FLAC...");
-            executor.execute(encoder);
-        });
-        cdr.start();
+        if (!ripping) {
+            final File baseDir = new File(FolderService.ROOT);
+            final CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
+            cdr.setTrackRippedListener(file -> {
+                Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
+                Track track = Track.createTrack(file, baseDir, "flac");
+                encoder.queue(track, false);
+                System.out.println("Will encode " + file.getName() + " to FLAC...");
+                executor.execute(encoder);
+            });
+            cdr.start();
+            ripping = true;
+        }
     }
 }
