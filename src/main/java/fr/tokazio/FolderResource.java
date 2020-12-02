@@ -24,7 +24,7 @@ public class FolderResource {
     FolderService service;
 
     @GET
-    public List<Folder> state() {
+    public List<Folder> all() {
         return service.all();
     }
 }

@@ -23,7 +23,8 @@ public class DBusListener {
     public DBusListener() {
         try {
             DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
-            conn.addSigHandler(new DBusMatchRule((String) null, "org.freedesktop.systemd1.Manager", "UnitNew"), new DBusSigHandler() {
+
+            conn.addGenericSigHandler(new DBusMatchRule("org.freedesktop.dbus.messages.DBusSignal", "org.freedesktop.systemd1.Manager", "UnitNew"), new DBusSigHandler() {
 
                 @Override
                 public void handle(DBusSignal s) {
@@ -37,7 +38,7 @@ public class DBusListener {
     }
 
     void onStart(@Observes StartupEvent ev) {
-        LOGGER.info("The application is starting...");
+        LOGGER.info("DBus listener is starting...");
     }
 
 
@@ -48,6 +49,6 @@ public class DBusListener {
      */
 
     void onStop(@Observes ShutdownEvent ev) {
-        LOGGER.info("The application is stopping...");
+        LOGGER.info("DBus listener is stopping...");
     }
 }
