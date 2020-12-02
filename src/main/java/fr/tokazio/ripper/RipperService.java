@@ -25,9 +25,18 @@ public class RipperService {
 
     private volatile boolean ripping;
 
-    public void rip() throws IOException, InterruptedException, RipException {
+    public synchronized void rip() throws IOException, InterruptedException, RipException {
         if (!ripping) {
             ripping = true;
+
+            File cdrom = new File("/dev/cdrom");
+
+            while (!cdrom.exists()) {
+                LOGGER.warn(cdrom + " not extists...");
+                Thread.sleep(10000);
+            }
+
+
             final File baseDir = new File(FolderService.ROOT);
             final CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
             cdr.setTrackRippedListener(file -> {
