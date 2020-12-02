@@ -13,6 +13,8 @@ import java.util.List;
 
 @ApplicationScoped
 public class DeviceService {
+
+
     public List<Device> devices() {
         List<Device> list = new ArrayList<>();
         int i = 0;
