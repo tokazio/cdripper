@@ -1,5 +1,6 @@
 package fr.tokazio;
 
+import fr.tokazio.ripper.RipperService;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.freedesktop.dbus.DBusMatchRule;
@@ -13,12 +14,17 @@ import org.slf4j.LoggerFactory;
 import javax.ejb.Startup;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import java.io.IOException;
 
 @Startup
 @ApplicationScoped
 public class DBusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBusListener.class);
+
+    @Inject
+    private RipperService ripperService;
 
     public DBusListener() {
         try {
@@ -28,7 +34,12 @@ public class DBusListener {
 
                 @Override
                 public void handle(DBusSignal s) {
-                    LOGGER.info("DBus signal: " + s);
+                    LOGGER.info("A disc was inserted, ripping it...");
+                    try {
+                        ripperService.rip();
+                    } catch (IOException | InterruptedException e) {
+                        LOGGER.error("Error ripping/encoding", e);
+                    }
                 }
             });
             LOGGER.info("Listening DBus...");

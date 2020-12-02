@@ -23,7 +23,7 @@ public class Runner {
         try {
             File baseDir = new File("ripped");
             CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
-            cdr.setListener(file -> {
+            cdr.setTrackRippedListener(file -> {
                 Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
                 Track track = Track.createTrack(file, baseDir, "flac");
                 encoder.queue(track, false);

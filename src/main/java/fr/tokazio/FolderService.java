@@ -10,10 +10,10 @@ import java.util.List;
 @ApplicationScoped
 public class FolderService {
 
-    private String root = "/media/usb-drive/hifi";
+    public static final String ROOT = "/media/usb-drive/hifi";
 
     public List<Folder> all() {
-        final List<File> files = new CollectorEngine().collect(root);
+        final List<File> files = new CollectorEngine().collect(ROOT);
 
         List<Folder> out = new LinkedList<>();
         for (File f : files) {

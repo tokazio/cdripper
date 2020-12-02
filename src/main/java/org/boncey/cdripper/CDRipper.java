@@ -30,7 +30,7 @@ public abstract class CDRipper {
     private final File _baseDir;
 
     private final List<String> _trackListing;
-    private CDRipperListener listener;
+    private CDRipperListener trackRippedlistener;
 
     public CDRipper(File baseDir, List<String> trackListing) {
         _baseDir = baseDir;
@@ -110,19 +110,19 @@ public abstract class CDRipper {
                     System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
                 } else {
                     System.out.println("Done ripping " + wavFile.getAbsolutePath());
-                    if (listener != null) {
-                        System.out.println("Listener.done...");
-                        listener.done(wavFile);
+                    if (trackRippedlistener != null) {
+                        System.out.println("trackRippedlistener.done...");
+                        trackRippedlistener.done(wavFile);
                     } else {
-                        System.out.println("No listener, go next...");
+                        System.out.println("No trackRippedlistener, go to next track...");
                     }
                 }
             }
         }
     }
 
-    public CDRipper setListener(CDRipperListener listener) {
-        this.listener = listener;
+    public CDRipper setTrackRippedListener(CDRipperListener listener) {
+        this.trackRippedlistener = listener;
         return this;
     }
 
