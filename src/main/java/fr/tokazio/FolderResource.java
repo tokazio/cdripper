@@ -10,6 +10,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.util.List;
 
 @Path("/folders")
@@ -26,5 +27,11 @@ public class FolderResource {
     @GET
     public List<Folder> all() {
         return service.all();
+    }
+
+    @Path("/eject")
+    @GET
+    public void eject() throws IOException, InterruptedException {
+        service.eject();
     }
 }

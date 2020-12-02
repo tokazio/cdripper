@@ -36,7 +36,7 @@ public class DBusListener {
 
                 @Override
                 public void handle(DBusSignal s) {
-                    LOGGER.info("DBus signal name: " + s.getName() + ", path: " + s.getPath() + ", source: " + s.getSource());
+                    LOGGER.info("DBus signal sig: " + s.getSig() + ", name: " + s.getName() + ", path: " + s.getPath() + ", source: " + s.getSource());
                     LOGGER.info("A disc was inserted, ripping it...");
                     try {
                         ripperService.rip();
