@@ -1,5 +1,6 @@
 package fr.tokazio.ripper;
 
+import fr.tokazio.OS;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
@@ -29,7 +30,7 @@ public class RipperService {
         if (!ripping) {
             ripping = true;
             final File baseDir = new File("./");//FolderService.ROOT);
-            final CDRipper cdr = new LinuxCDRipper(baseDir, Collections.emptyList());
+            final CDRipper cdr = provideRipper(baseDir);
             cdr.setTrackRippedListener(file -> {
                 Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
                 Track track = Track.createTrack(file, baseDir, "flac");
@@ -46,6 +47,16 @@ public class RipperService {
             });
             tentative(cdr, 1);
         }
+    }
+
+    private CDRipper provideRipper(final File baseDir) throws IOException, InterruptedException {
+        if (OS.isUnix()) {
+            return new LinuxCDRipper(baseDir, Collections.emptyList());
+        }
+        if (OS.isMac()) {
+            return new MacOSCDRipper(baseDir, Collections.emptyList());
+        }
+        throw new UnsupportedOperationException("OS not supported");
     }
 
     private void tentative(CDRipper cdr, int nb) throws RipException, InterruptedException, IOException {

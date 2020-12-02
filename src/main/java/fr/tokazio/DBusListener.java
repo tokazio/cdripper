@@ -28,6 +28,10 @@ public class DBusListener {
     private RipperService ripperService;
 
     public DBusListener() {
+        if (!OS.isUnix()) {
+            LOGGER.warn("DBus not supported with this OS");
+            return;
+        }
         try {
             DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
 
@@ -36,6 +40,7 @@ public class DBusListener {
                 @Override
                 public void handle(DBusSignal s) {
                     LOGGER.info("DBus signal sig: " + s.getSig() + ", name: " + s.getName() + ", path: " + s.getPath() + ", source: " + s.getSource());
+                    //TODO get string "dev-cdrom.device" from signal
                     LOGGER.info("A disc was inserted, ripping it...");
                     try {
                         ripperService.rip();

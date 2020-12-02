@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * @author Darren Greaves
  * @version $Id: CDRipper.java,v 1.8 2008-11-14 11:48:58 boncey Exp $
  */
-public class MacOSRipper extends CDRipper {
+public class MacOSCDRipper extends CDRipper {
 
     /**
      * The command for getting CD info.
@@ -90,7 +90,7 @@ public class MacOSRipper extends CDRipper {
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public MacOSRipper(File baseDir, List<String> trackListing) {
+    public MacOSCDRipper(File baseDir, List<String> trackListing) {
         super(baseDir, trackListing);
     }
 
