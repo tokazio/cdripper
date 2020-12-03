@@ -1,5 +1,6 @@
 package org.boncey.cdripper;
 
+import fr.tokazio.ripper.DiscId;
 import org.boncey.cdripper.model.CDInfo;
 
 import java.io.File;
@@ -51,6 +52,13 @@ public abstract class CDRipper {
         if (!exists) {
             tmpDir.mkdirs();
 
+            try {
+                new DiscId().getDiscId();
+            } catch (IOException | InterruptedException ex) {
+                throw new CdInfoException(ex);
+            }
+
+            /*
             CDInfo cdInfo;
             try {
                 cdInfo = getCDInfo(tmpDir);
@@ -77,6 +85,8 @@ public abstract class CDRipper {
                     throw new RipException(e);
                 }
             }
+
+             */
         } else {
             fail(String.format("%s exists; clean up required", tmpDir));
         }
