@@ -440,9 +440,9 @@ public interface Manager extends DBusInterface {
     class UnitNew extends DBusSignal {
         public final String unitName;
 
-        public UnitNew(String path, String unitName, ObjectPath oPath)
+        public UnitNew(String unitName, ObjectPath oPath)
                 throws DBusException {
-            super(path, unitName, oPath);
+            super(unitName, oPath);
             this.unitName = unitName;
         }
 
