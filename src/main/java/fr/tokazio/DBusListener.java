@@ -51,6 +51,10 @@ signal time=1607002991.464743 sender=:1.2 -> destination=(null destination) seri
 
      */
 
+    public DBusListener() {
+        start();
+    }
+
     public void start() {
         if (!OS.isUnix()) {
             LOGGER.warn("DBus not supported with this OS");
@@ -100,7 +104,7 @@ signal time=1607002991.464743 sender=:1.2 -> destination=(null destination) seri
 
     void onStart(@Observes StartupEvent ev) {
         LOGGER.info("DBus listener is starting...");
-        start();
+
     }
 
 
