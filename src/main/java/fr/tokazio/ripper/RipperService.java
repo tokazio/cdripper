@@ -88,7 +88,7 @@ public class RipperService {
         Thread.sleep(5000);
         try {
             cdr.start();
-        } catch (CdInfoException | DiscIdException ex) {
+        } catch (DiscIdException | CDDBException ex) {
             LOGGER.warn("Error getting CD infos, will retry after 5sec", ex);
             tentative(cdr, nb + 1);
         }

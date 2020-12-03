@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.StringJoiner;
 
 /**
+ * Using third party tool called cd-discid
  * OSX:
  * brew install cd-discid
  * <p>
@@ -13,6 +14,11 @@ import java.util.StringJoiner;
  * apt install cd-discid
  *
  * @link http://manpages.ubuntu.com/manpages/trusty/man1/cd-discid.1.html
+ * <p>
+ * This one uses a lib:
+ * @link https://www.javatips.net/api/MetaMusic-master/retrieval-tools/src/main/java/slash/metamusic/discid/DiscId.java
+ * <p>
+ * No java native solution found
  */
 public class DiscId {
 
