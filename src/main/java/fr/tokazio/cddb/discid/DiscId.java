@@ -32,11 +32,12 @@ public class DiscId {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             final StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
             reader.lines().iterator().forEachRemaining(sj::add);
+            String result = sj.toString();
             proc.waitFor();
             if (proc.exitValue() != 0) {
-                throw new DiscIdException(sj.toString());
+                throw new DiscIdException(result);
             }
-            return new DiscIdData(sj.toString());
+            return new DiscIdData(result);
         } catch (IOException | InterruptedException ex) {
             throw new DiscIdException(ex);
         }
