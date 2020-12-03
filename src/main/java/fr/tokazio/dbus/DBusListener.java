@@ -1,5 +1,6 @@
-package fr.tokazio;
+package fr.tokazio.dbus;
 
+import fr.tokazio.OS;
 import fr.tokazio.ripper.RipperService;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -11,8 +12,6 @@ import org.freedesktop.systemd1.Manager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ejb.Startup;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.io.IOException;
@@ -40,8 +39,12 @@ signal time=1607002991.464743 sender=:1.2 -> destination=(null destination) seri
 string "dev-cdrom.device"
 object path "/org/freedesktop/systemd1/unit/dev_2dcdrom_2edevice"
  */
-@Startup
-@ApplicationScoped
+//@Startup
+//@ApplicationScoped
+
+/**
+ * @link https://dbus.freedesktop.org/doc/dbus-java/dbus-java.pdf
+ */
 public class DBusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBusListener.class);
