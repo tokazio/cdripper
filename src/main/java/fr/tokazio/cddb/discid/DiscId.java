@@ -24,8 +24,6 @@ public class DiscId {
 
     public static final String CD_DISCID = "cd-discid";
 
-    private final StringBuilder sb = new StringBuilder();
-
     public DiscIdData getDiscId() throws DiscIdException {
         final ProcessBuilder pb = new ProcessBuilder(CD_DISCID);
         pb.inheritIO();
@@ -38,8 +36,7 @@ public class DiscId {
             if (proc.exitValue() != 0) {
                 throw new DiscIdException(sj.toString());
             }
-            final DiscIdData data = new DiscIdData(sj.toString());
-            return data;
+            return new DiscIdData(sj.toString());
         } catch (IOException | InterruptedException ex) {
             throw new DiscIdException(ex);
         }

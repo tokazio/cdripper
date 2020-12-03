@@ -1,9 +1,14 @@
 package fr.tokazio.cddb.discid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 
 public class DiscIdData {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiscIdData.class);
 
     private final String discId;
     private final int nbTracks;
@@ -15,8 +20,15 @@ public class DiscIdData {
     //       seconds, on one line in a space-delimited format.
     //cc10ae0f 15 182 13005 28870 46377 62425 87930 112267 128607 143960 159022 190262 233922 248090 275132 303485 4272
 
-    public DiscIdData(String str) {
-        final String[] out = str.split(" ");
+    public DiscIdData(final String str) {
+        LOGGER.debug("Creating DiscIdData with: " + str + "...");
+        if (str == null || str.isEmpty()) {
+            throw new IllegalArgumentException("Can't create a DiscIdData from an null/empty string.");
+        }
+        final String[] out = str.trim().split("\\s");
+        if (out.length < 4) {
+            throw new IllegalArgumentException("It seems to miss data to build a DiscIdData with: " + str + ". It should be {discId} {nbTracks} {offsets...} {totalLenInSec}.");
+        }
         final LinkedList<String> l = new LinkedList<String>(Arrays.asList(out));
         discId = l.pollFirst();
         nbTracks = Integer.parseInt(l.pollFirst());

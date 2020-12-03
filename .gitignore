@@ -9,3 +9,4 @@ deploy.sh
 /build/
 /encoded/
 /*.png
+/out/
