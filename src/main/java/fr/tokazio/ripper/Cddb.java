@@ -2,19 +2,22 @@ package fr.tokazio.ripper;
 
 import fr.tokazio.cddb.CDDB;
 import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscIdData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 public class Cddb {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cddb.class);
 
     protected static String pad(int value) {
         return ((value > 9) ? "" : " ") + value;
     }
 
-    public List<CDDB.Entry> getCddb(final DiscIdData discIdData) throws CDDBException {
+    public CddbData getCddb(final DiscIdData discIdData) throws CDDBException {
 
         try (CDDB cddb = new CDDB()) {
             cddb.connect("gnudb.gnudb.org", 8880);
@@ -28,28 +31,23 @@ public class Cddb {
                 throw new CDDBException("No match for disc id " + discIdData.getDiscId() + ".");
 
             }
-
-            for (int i = 0; i < entries.length; i++) {
-                System.out.println("Match " + entries[i].category + "/" +
-                        entries[i].cdid + "/" +
-                        entries[i].title);
-                try {
-                    CDDB.Detail detail = cddb.read(entries[i].category,
-                            entries[i].cdid);
-                    System.out.println("Title: " + detail.title);
-                    for (int j = 0; j < detail.trackNames.length; j++) {
-                        System.out.println(pad(j) + ": " + detail.trackNames[i]);
-                    }
-                    System.out.println("Extended data: " + detail.extendedData);
-                    for (int j = 0; j < detail.extendedTrackData.length; j++) {
-                        System.out.println(pad(j) + ": " + detail.extendedTrackData[i]);
-                    }
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+            final CddbData cddbData = new CddbData(entries[0].cdid, entries[0].title);
+            try {
+                CDDB.Detail detail = cddb.read(entries[0].category,
+                        entries[0].cdid);
+                LOGGER.debug("Title: " + detail.title);
+                for (int j = 0; j < detail.trackNames.length; j++) {
+                    LOGGER.debug(pad(j) + ": " + detail.trackNames[j]);
+                    cddbData.addTrack(detail.trackNames[j]);
                 }
+                LOGGER.debug("Extended data: " + detail.extendedData);
+                for (int j = 0; j < detail.extendedTrackData.length; j++) {
+                    LOGGER.debug(pad(j) + ": " + detail.extendedTrackData[j]);
+                }
+            } catch (IOException ex) {
+                throw new CDDBException(ex);
             }
-
-            return Arrays.asList(entries);
+            return cddbData;
         }
     }
 }

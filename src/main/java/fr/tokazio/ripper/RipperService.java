@@ -1,8 +1,8 @@
 package fr.tokazio.ripper;
 
 import fr.tokazio.OS;
-import fr.tokazio.cddb.CDDB;
 import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
@@ -17,7 +17,6 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -36,7 +35,7 @@ public class RipperService {
         return new DiscId().getDiscId();
     }
 
-    public List<CDDB.Entry> cddb(final DiscIdData discIdData) throws CDDBException {
+    public CddbData cddb(final DiscIdData discIdData) throws CDDBException {
         return new Cddb().getCddb(discIdData);
     }
 

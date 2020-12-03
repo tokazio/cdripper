@@ -1,16 +1,17 @@
 package org.boncey.cdripper;
 
-import fr.tokazio.cddb.CDDB;
 import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.ripper.Cddb;
 import org.boncey.cdripper.model.CDInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -23,6 +24,8 @@ import java.util.regex.Pattern;
  * @version $Id: CDRipper.java,v 1.8 2008-11-14 11:48:58 boncey Exp $
  */
 public abstract class CDRipper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CDRipper.class);
 
     /**
      * The file extension for encoded files.
@@ -58,8 +61,24 @@ public abstract class CDRipper {
             tmpDir.mkdirs();
 
             DiscIdData discIdData = new DiscId().getDiscId();
-            List<CDDB.Entry> entries = new Cddb().getCddb(discIdData);
+            CddbData cddbData = new Cddb().getCddb(discIdData);
 
+
+            /*
+            File dir;
+            if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
+                cdInfo.fromTrackListing(_trackListing);
+            } else if (!cdInfo.recognised()) {
+                fail("Unable to recognise disk - provide a track listing file; aborting");
+            }
+
+             */
+
+            System.out.println(String.format("%s by %s", cddbData.getAlbum(), cddbData.getArtist()));
+            File dir = new File(_baseDir, cddbData.getArtist() + "-" + cddbData.getAlbum());
+            rip(cddbData, tmpDir);
+            dir.mkdirs();
+            tmpDir.renameTo(dir);
 
             /*
             CDInfo cdInfo;
@@ -115,36 +134,38 @@ public abstract class CDRipper {
      * @throws IOException          if unable to interact with the cdparanoia process.
      * @throws InterruptedException if this thread is interrupted.
      */
-    private void rip(CDInfo cdInfo, File baseDir) throws IOException, InterruptedException {
+    private void rip(CddbData cdInfo, File baseDir) throws RipException {
         int index = 1;
-        for (Iterator<String> i = cdInfo.getTracks().iterator(); i.hasNext(); index++) {
-            String trackName = i.next();
-            String indexStr = ((index < 10) ? "0" : "") + index;
-            String filename = tidyFilename(indexStr + " - " + trackName + EXT);
-            File wavFile = new File(baseDir, filename);
-            File tempFile = File.createTempFile("wav", null, baseDir);
-            System.out.println(String.format("Ripping %s (%s)", tempFile.getName(), wavFile.getName()));
-            ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-e", "-E", "-z", String.valueOf(index), tempFile.getAbsolutePath());
-            pb.inheritIO();//ça c'est cool
-            Process proc = pb.start();
-            proc.waitFor();
-
-            if (proc.exitValue() != 0) {
-                System.err.println("Unable to rip " + tempFile);
-            } else {
-                if (!tempFile.renameTo(wavFile)) {
-                    System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
+        cdInfo.getTracks().stream().map(t -> {
+            return t.getIndex() + "-" + t.getArtist() + "-" + t.getTitle() + EXT;
+        }).forEach(trackName -> {
+            try {
+                File wavFile = new File(baseDir, trackName);
+                File tempFile = File.createTempFile("wav", null, baseDir);
+                System.out.println(String.format("Ripping %s (%s)", tempFile.getName(), wavFile.getName()));
+                ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-e", "-E", "-z", String.valueOf(index), tempFile.getAbsolutePath());
+                pb.inheritIO();//ça c'est cool
+                Process proc = pb.start();
+                proc.waitFor();
+                if (proc.exitValue() != 0) {
+                    System.err.println("Unable to rip " + tempFile);
                 } else {
-                    System.out.println("Done ripping " + wavFile.getAbsolutePath());
-                    if (trackRippedlistener != null) {
-                        System.out.println("trackRippedlistener.done...");
-                        trackRippedlistener.done(wavFile);
+                    if (!tempFile.renameTo(wavFile)) {
+                        System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
                     } else {
-                        System.out.println("No trackRippedlistener, go to next track...");
+                        System.out.println("Done ripping " + wavFile.getAbsolutePath());
+                        if (trackRippedlistener != null) {
+                            System.out.println("trackRippedlistener.done...");
+                            trackRippedlistener.done(wavFile);
+                        } else {
+                            System.out.println("No trackRippedlistener, go to next track...");
+                        }
                     }
                 }
+            } catch (IOException | InterruptedException ex) {
+                LOGGER.error("Error ripping disc", ex);
             }
-        }
+        });
         if (endListener != null) {
             endListener.apply(null);
         }
