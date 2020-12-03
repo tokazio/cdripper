@@ -35,23 +35,25 @@ public class DBusListener2 {
         try {
             final Process proc = pb.start();
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                //LOGGER.debug("DBus> " + line);
-                if (line.trim().startsWith("signal")) {
-                    LOGGER.debug("New Signal detected: '" + line.trim() + "'");
-                    if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
-                        LOGGER.debug("New unit detected");
-                        getNext = true;
-                        break;
+            while (proc.isAlive()) {
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    //LOGGER.debug("DBus> " + line);
+                    if (line.trim().startsWith("signal")) {
+                        LOGGER.debug("New Signal detected: '" + line.trim() + "'");
+                        if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
+                            LOGGER.debug("New unit detected");
+                            getNext = true;
+                            break;
+                        }
                     }
-                }
-                if (getNext) {
-                    LOGGER.debug("New unit detected, wich ? '" + line.trim() + "'");
-                    getNext = false;
-                    if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
-                        LOGGER.debug("dev-sr0.device detected >>>>>> handle");
-                        handle();
+                    if (getNext) {
+                        LOGGER.debug("New unit detected, wich ? '" + line.trim() + "'");
+                        getNext = false;
+                        if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
+                            LOGGER.debug("dev-sr0.device detected >>>>>> handle");
+                            handle();
+                        }
                     }
                 }
             }
