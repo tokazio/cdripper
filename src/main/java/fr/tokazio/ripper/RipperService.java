@@ -41,14 +41,15 @@ public class RipperService {
 
     public void rip() throws IOException, InterruptedException, RipException {
         if (!ripping) {
+            LOGGER.info("Start ripping...");
             ripping = true;
-            final File baseDir = new File("./");//FolderService.ROOT);
+            final File baseDir = new File("/root");//FolderService.ROOT);
             final CDRipper cdr = provideRipper(baseDir);
             cdr.setTrackRippedListener(file -> {
                 Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
                 Track track = Track.createTrack(file, baseDir, "flac");
                 encoder.queue(track, false);
-                LOGGER.info("Will encode " + file.getName() + " to FLAC...");
+                LOGGER.debug("Will encode " + file.getName() + " to FLAC...");
                 executor.execute(encoder);
             });
             cdr.setEndListener(new Function() {
@@ -59,6 +60,8 @@ public class RipperService {
                 }
             });
             tentative(cdr, 1);
+        } else {
+            LOGGER.warn("Already ripping!");
         }
     }
 

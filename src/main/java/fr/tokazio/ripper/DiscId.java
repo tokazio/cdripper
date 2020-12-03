@@ -1,9 +1,9 @@
 package fr.tokazio.ripper;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.Scanner;
+import java.io.InputStreamReader;
+import java.util.StringJoiner;
 
 /**
  * brew install cd-discid
@@ -14,13 +14,19 @@ public class DiscId {
 
     public void getDiscId() throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("cd-discid");
+
         //pb.inheritIO();//ça c'est cool
 
+        String result = "";
 
         Process proc = pb.start();
 
-        inheritIO(proc.getInputStream(), System.out);
-        inheritIO(proc.getErrorStream(), System.err);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+        StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
+        reader.lines().iterator().forEachRemaining(sj::add);
+        result = sj.toString();
+
 
         proc.waitFor();
 
@@ -33,21 +39,8 @@ public class DiscId {
             System.out.println("Error with DiscId");
         } else {
             System.out.println("DiscId ok");
-            System.out.println(sb.toString());
+            System.out.println(result);
         }
     }
 
-    private Thread inheritIO(final InputStream src, final PrintStream dest) {
-        return new Thread(new Runnable() {
-            public void run() {
-                Scanner sc = new Scanner(src);
-                while (sc.hasNextLine()) {
-                    String s = sc.nextLine();
-                    dest.println(s);
-                    sb.append(s);
-                }
-                dest.flush();
-            }
-        });
-    }
 }

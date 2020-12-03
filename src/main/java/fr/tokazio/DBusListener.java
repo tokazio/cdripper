@@ -39,7 +39,7 @@ public class DBusListener {
 
                 @Override
                 public void handle(DBusSignal s) {
-                    LOGGER.info("DBus signal sig: " + s.getSig() + ", name: " + s.getName() + ", path: " + s.getPath() + ", source: " + s.getSource());
+                    LOGGER.info("DBus signal data: " + String.valueOf(s.getWireData()) + ", sig: " + s.getSig() + ", name: " + s.getName() + ", path: " + s.getPath() + ", source: " + s.getSource());
                     //TODO get string "dev-cdrom.device" from signal
                     LOGGER.info("A disc was inserted, ripping it...");
                     try {
