@@ -43,6 +43,7 @@ public class DBusListener2 {
                     if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
                         LOGGER.debug("New unit detected");
                         getNext = true;
+                        break;
                     }
                 }
                 if (getNext) {
