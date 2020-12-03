@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -25,6 +27,17 @@ public class RipperService {
     private final Encoded monitor = new FileDeletingTrackMonitor();
 
     private volatile boolean ripping;
+
+    public List<CDDB.Entry> cddb(final String cdid, int[] offsets, int length) throws IOException, CDDBException {
+        CDDB cddb = new CDDB();
+        cddb.connect("gnudb.gnudb.org", 8880);
+        cddb.setTimeout(30 * 1000);
+        //"1b037b03"
+        //  int[] offsets = { 150, 18130, 48615 };
+        //  int length = 893;
+        CDDB.Entry[] entries = cddb.query(cdid, offsets, length);
+        return Arrays.asList(entries);
+    }
 
     public void rip() throws IOException, InterruptedException, RipException {
         if (!ripping) {
