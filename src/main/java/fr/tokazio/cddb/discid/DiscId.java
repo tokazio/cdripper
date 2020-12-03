@@ -26,13 +26,14 @@ public class DiscId {
 
     public DiscIdData getDiscId() throws DiscIdException {
         final ProcessBuilder pb = new ProcessBuilder(CD_DISCID);
-        pb.inheritIO();
+        //pb.inheritIO();
+        String result = "";
         try {
             final Process proc = pb.start();
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             final StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
             reader.lines().iterator().forEachRemaining(sj::add);
-            String result = sj.toString();
+            result = sj.toString();
             proc.waitFor();
             if (proc.exitValue() != 0) {
                 throw new DiscIdException(result);
