@@ -51,17 +51,16 @@ signal time=1607002991.464743 sender=:1.2 -> destination=(null destination) seri
 
      */
 
-    public DBusListener() {
-        start();
-    }
+    private DBusConnection conn;
 
-    public void start() {
+    void onStart(@Observes StartupEvent ev) {
+        LOGGER.info("DBus listener is starting...");
         if (!OS.isUnix()) {
             LOGGER.warn("DBus not supported with this OS");
             return;
         }
         try {
-            DBusConnection conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
+            conn = DBusConnection.getConnection(DBusConnection.DBusBusType.SYSTEM);
 
             conn.addSigHandler(Manager.UnitNew.class, new DBusSigHandler<Manager.UnitNew>() {
 
@@ -98,14 +97,11 @@ signal time=1607002991.464743 sender=:1.2 -> destination=(null destination) seri
 
              */
         } catch (DBusException e) {
-            LOGGER.error("Error listening DBud", e);
+            LOGGER.error("Error listening DBus", e);
         }
     }
 
-    void onStart(@Observes StartupEvent ev) {
-        LOGGER.info("DBus listener is starting...");
 
-    }
 
 
     /*
@@ -114,7 +110,10 @@ signal time=1607002991.464743 sender=:1.2 -> destination=(null destination) seri
    object path "/org/freedesktop/systemd1/unit/dev_2dcdrom_2edevice"
      */
 
-    void onStop(@Observes ShutdownEvent ev) {
+    void onStop(@Observes ShutdownEvent ev) throws IOException {
         LOGGER.info("DBus listener is stopping...");
+        if (conn != null) {
+            conn.close();
+        }
     }
 }

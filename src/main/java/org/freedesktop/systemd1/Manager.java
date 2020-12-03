@@ -439,9 +439,9 @@ public interface Manager extends DBusInterface {
     class UnitNew extends DBusSignal {
         public final String unitName;
 
-        public UnitNew(String path, String unitName, Object o)
+        public UnitNew(String path, String unitName)
                 throws DBusException {
-            super(path, unitName, o);
+            super(path, unitName);
             this.unitName = unitName;
         }
 
