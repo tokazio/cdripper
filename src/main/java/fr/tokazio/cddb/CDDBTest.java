@@ -1,4 +1,4 @@
-package fr.tokazio.ripper;
+package fr.tokazio.cddb;
 
 /**
  * @link https://github.com/samskivert/samskivert/blob/master/src/main/java/com/samskivert/net/cddb/CDDBTest.java
@@ -16,7 +16,7 @@ public class CDDBTest {
             cddb.setTimeout(30 * 1000);
 
             // try a test query
-            int[] offsets = {150, 18130, 48615};
+            Integer[] offsets = {150, 18130, 48615};
             int length = 893;
             CDDB.Entry[] entries = cddb.query(cdid, offsets, length);
 

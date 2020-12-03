@@ -1,4 +1,4 @@
-package fr.tokazio.ripper;
+package fr.tokazio.cddb;
 
 /**
  * @link https://github.com/samskivert/samskivert/blob/master/src/main/java/com/samskivert/net/cddb/CDDBTest.java

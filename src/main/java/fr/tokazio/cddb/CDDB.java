@@ -1,4 +1,4 @@
-package fr.tokazio.ripper;
+package fr.tokazio.cddb;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * <a href="http://www.freedb.org/software/old/CDDBPROTO">CDDB protocol</a>.
  * * @link https://github.com/samskivert/samskivert/blob/master/src/main/java/com/samskivert/net/cddb/CDDBTest.java
  */
-public class CDDB {
+public class CDDB implements Closeable {
     /**
      * The port on which CDDB servers are generally run.
      */
@@ -65,7 +65,7 @@ public class CDDB {
      * @see #close
      */
     public String connect(String hostname, int port)
-            throws IOException, CDDBException {
+            throws CDDBException {
         return connect(hostname, port, CLIENT_NAME, CLIENT_VERSION);
     }
 
@@ -86,48 +86,52 @@ public class CDDB {
      * @see #close
      */
     public String connect(String hostname, int port, String clientName, String clientVersion)
-            throws IOException, CDDBException {
+            throws CDDBException {
         // obtain the necessary information we'll need to identify
         // ourselves to the CDDB server
-        String localhost = InetAddress.getLocalHost().getHostName();
-        String username = System.getProperty("user.name");
-        if (username == null) {
-            username = "anonymous";
+        try {
+            String localhost = InetAddress.getLocalHost().getHostName();
+            String username = System.getProperty("user.name");
+            if (username == null) {
+                username = "anonymous";
+            }
+
+            // establish our socket connection and IO streams
+            InetAddress addr = InetAddress.getByName(hostname);
+            _sock = new Socket(addr, port);
+            _in = new BufferedReader(new InputStreamReader(_sock.getInputStream(), ISO8859));
+            _out = new PrintStream(new BufferedOutputStream(_sock.getOutputStream()), false, ISO8859);
+
+            // first read (and discard) the banner string
+            _in.readLine();
+
+            // try and change to the latest protocol version
+            Response rsp = request("proto 6");
+            if (rsp.code == 201 || rsp.code == 501) {
+                // Protocol 6 uses UTF-8
+                _in = new BufferedReader(new InputStreamReader(_sock.getInputStream(), UTF8));
+                _out = new PrintStream(new BufferedOutputStream(_sock.getOutputStream()), false, UTF8);
+            }
+
+            // send a hello request
+            StringBuilder req = new StringBuilder("cddb hello ");
+            req.append(username).append(" ");
+            req.append(localhost).append(" ");
+            req.append(clientName).append(" ");
+            req.append(clientVersion);
+
+            rsp = request(req.toString());
+
+            // confirm that the response was a successful one
+            if (CDDBProtocol.codeFamily(rsp.code) != CDDBProtocol.OK &&
+                    rsp.code != 402 /* already shook hands */) {
+                throw new CDDBException(rsp.code, rsp.message);
+            }
+
+            return rsp.message;
+        } catch (IOException ex) {
+            throw new CDDBException(ex);
         }
-
-        // establish our socket connection and IO streams
-        InetAddress addr = InetAddress.getByName(hostname);
-        _sock = new Socket(addr, port);
-        _in = new BufferedReader(new InputStreamReader(_sock.getInputStream(), ISO8859));
-        _out = new PrintStream(new BufferedOutputStream(_sock.getOutputStream()), false, ISO8859);
-
-        // first read (and discard) the banner string
-        _in.readLine();
-
-        // try and change to the latest protocol version
-        Response rsp = request("proto 6");
-        if (rsp.code == 201 || rsp.code == 501) {
-            // Protocol 6 uses UTF-8
-            _in = new BufferedReader(new InputStreamReader(_sock.getInputStream(), UTF8));
-            _out = new PrintStream(new BufferedOutputStream(_sock.getOutputStream()), false, UTF8);
-        }
-
-        // send a hello request
-        StringBuilder req = new StringBuilder("cddb hello ");
-        req.append(username).append(" ");
-        req.append(localhost).append(" ");
-        req.append(clientName).append(" ");
-        req.append(clientVersion);
-
-        rsp = request(req.toString());
-
-        // confirm that the response was a successful one
-        if (CDDBProtocol.codeFamily(rsp.code) != CDDBProtocol.OK &&
-                rsp.code != 402 /* already shook hands */) {
-            throw new CDDBException(rsp.code, rsp.message);
-        }
-
-        return rsp.message;
     }
 
     /**
@@ -136,9 +140,13 @@ public class CDDB {
      * otherwise the timeout will not be set.
      */
     public void setTimeout(int timeout)
-            throws SocketException {
+            throws CDDBException {
         if (_sock != null) {
-            _sock.setSoTimeout(timeout);
+            try {
+                _sock.setSoTimeout(timeout);
+            } catch (SocketException e) {
+                throw new CDDBException(e);
+            }
         }
     }
 
@@ -153,11 +161,14 @@ public class CDDB {
      * Closes the connection to the CDDB server previously opened with a call to {@link #connect}.
      * If the connection was not previously established, this member function does nothing.
      */
-    public void close()
-            throws IOException {
+    @Override
+    public void close() {
         if (_sock != null) {
-            _sock.close();
-
+            try {
+                _sock.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             // clear out our references
             _sock = null;
             _in = null;
@@ -208,8 +219,8 @@ public class CDDB {
      * @return If no entry matches the query, null is returned. Otherwise one or more entries is
      * returned that matched the query parameters.
      */
-    public Entry[] query(String discid, int[] frameOffsets, int length)
-            throws IOException, CDDBException {
+    public Entry[] query(String discid, Integer[] frameOffsets, int length)
+            throws CDDBException {
         // sanity check
         if (_sock == null) {
             throw new CDDBException(500, "Not connected");
@@ -225,34 +236,39 @@ public class CDDB {
         req.append(length);
 
         // make the request
-        Response rsp = request(req.toString());
-        Entry[] entries = null;
+        try {
+            Response rsp = request(req.toString());
+            Entry[] entries = null;
 
-        // if this is an exact match, parse the entry and return it
-        if (rsp.code == 200 /* exact match */) {
-            entries = new Entry[1];
-            entries[0] = new Entry();
-            entries[0].parse(rsp.message);
+            // if this is an exact match, parse the entry and return it
+            if (rsp.code == 200 /* exact match */) {
+                entries = new Entry[1];
+                entries[0] = new Entry();
+                entries[0].parse(rsp.message);
 
-        } else if (rsp.code == 211 /* inexact matches */) {
-            // read the matches from the server
-            ArrayList<Entry> list = new ArrayList<Entry>();
-            String input = _in.readLine();
-            while (input != null && !input.equals(CDDBProtocol.TERMINATOR)) {
-                System.out.println("...: " + input);
-                Entry e = new Entry();
-                e.parse(input);
-                list.add(e);
-                input = _in.readLine();
+            } else if (rsp.code == 211 /* inexact matches */) {
+                // read the matches from the server
+                ArrayList<Entry> list = new ArrayList<Entry>();
+                String input = _in.readLine();
+                while (input != null && !input.equals(CDDBProtocol.TERMINATOR)) {
+                    System.out.println("...: " + input);
+                    Entry e = new Entry();
+                    e.parse(input);
+                    list.add(e);
+                    input = _in.readLine();
+                }
+                entries = new Entry[list.size()];
+                list.toArray(entries);
+
+            } else if (CDDBProtocol.codeFamily(rsp.code) != CDDBProtocol.OK) {
+                throw new CDDBException(rsp.code, rsp.message);
             }
-            entries = new Entry[list.size()];
-            list.toArray(entries);
 
-        } else if (CDDBProtocol.codeFamily(rsp.code) != CDDBProtocol.OK) {
-            throw new CDDBException(rsp.code, rsp.message);
+            return entries;
+        } catch (IOException ex) {
+            throw new CDDBException(ex);
         }
 
-        return entries;
     }
 
     /**
@@ -473,6 +489,16 @@ public class CDDB {
             category = source.substring(0, sidx1);
             cdid = source.substring(sidx1 + 1, sidx2);
             title = source.substring(sidx2 + 1);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("Entry{");
+            sb.append("category='").append(category).append('\'');
+            sb.append(", cdid='").append(cdid).append('\'');
+            sb.append(", title='").append(title).append('\'');
+            sb.append('}');
+            return sb.toString();
         }
     }
 

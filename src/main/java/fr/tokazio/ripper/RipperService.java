@@ -1,6 +1,11 @@
 package fr.tokazio.ripper;
 
 import fr.tokazio.OS;
+import fr.tokazio.cddb.CDDB;
+import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.discid.DiscId;
+import fr.tokazio.cddb.discid.DiscIdData;
+import fr.tokazio.cddb.discid.DiscIdException;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
@@ -11,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -28,15 +32,12 @@ public class RipperService {
 
     private volatile boolean ripping;
 
-    public List<CDDB.Entry> cddb(final String cdid, int[] offsets, int length) throws IOException, CDDBException {
-        CDDB cddb = new CDDB();
-        cddb.connect("gnudb.gnudb.org", 8880);
-        cddb.setTimeout(30 * 1000);
-        //"1b037b03"
-        //  int[] offsets = { 150, 18130, 48615 };
-        //  int length = 893;
-        CDDB.Entry[] entries = cddb.query(cdid, offsets, length);
-        return Arrays.asList(entries);
+    public DiscIdData discid() throws DiscIdException {
+        return new DiscId().getDiscId();
+    }
+
+    public List<CDDB.Entry> cddb(final DiscIdData discIdData) throws CDDBException {
+        return new Cddb().getCddb(discIdData);
     }
 
     public void rip() throws IOException, InterruptedException, RipException {
@@ -87,7 +88,7 @@ public class RipperService {
         Thread.sleep(5000);
         try {
             cdr.start();
-        } catch (CdInfoException ex) {
+        } catch (CdInfoException | DiscIdException ex) {
             LOGGER.warn("Error getting CD infos, will retry after 5sec", ex);
             tentative(cdr, nb + 1);
         }

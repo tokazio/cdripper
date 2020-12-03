@@ -1,6 +1,11 @@
 package org.boncey.cdripper;
 
-import fr.tokazio.ripper.DiscId;
+import fr.tokazio.cddb.CDDB;
+import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.discid.DiscId;
+import fr.tokazio.cddb.discid.DiscIdData;
+import fr.tokazio.cddb.discid.DiscIdException;
+import fr.tokazio.ripper.Cddb;
 import org.boncey.cdripper.model.CDInfo;
 
 import java.io.File;
@@ -46,17 +51,15 @@ public abstract class CDRipper {
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public void start() throws CdInfoException, RipException {
+    public void start() throws RipException, DiscIdException, CDDBException {
         File tmpDir = new File(_baseDir, TEMP_DIR);
         boolean exists = tmpDir.exists() && !tmpDir.delete();
         if (!exists) {
             tmpDir.mkdirs();
 
-            try {
-                new DiscId().getDiscId();
-            } catch (IOException | InterruptedException ex) {
-                throw new CdInfoException(ex);
-            }
+            DiscIdData discIdData = new DiscId().getDiscId();
+            List<CDDB.Entry> entries = new Cddb().getCddb(discIdData);
+
 
             /*
             CDInfo cdInfo;
