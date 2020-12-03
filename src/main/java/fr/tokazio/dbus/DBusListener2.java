@@ -37,13 +37,13 @@ public class DBusListener2 {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String line = null;
             while ((line = reader.readLine()) != null) {
-                System.out.println("DBus> " + line);
-                if (line.startsWith("signal") && line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
+                LOGGER.debug("DBus> " + line);
+                if (line.trim().startsWith("signal") && line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
                     getNext = true;
                 }
                 if (getNext) {
                     getNext = false;
-                    if (line.startsWith("string") && line.contains("\"dev-sr0.device\"")) {
+                    if (line.trim().startsWith("string") && line.contains("\"dev-sr0.device\"")) {
                         handle();
                     }
                 }

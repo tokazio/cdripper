@@ -2,8 +2,6 @@ package fr.tokazio.dbus;
 
 import fr.tokazio.OS;
 import fr.tokazio.ripper.RipperService;
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
 import org.boncey.cdripper.RipException;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.exceptions.DBusException;
@@ -12,7 +10,6 @@ import org.freedesktop.systemd1.Manager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.io.IOException;
 
@@ -54,7 +51,7 @@ public class DBusListener {
 
     private DBusConnection conn;
 
-    void onStart(@Observes StartupEvent ev) {
+    void onStart() {//@Observes StartupEvent ev) {
         LOGGER.info("DBus listener is starting...");
         if (!OS.isUnix()) {
             LOGGER.warn("DBus not supported with this OS");
@@ -102,7 +99,7 @@ public class DBusListener {
         }
     }
 
-    void onStop(@Observes ShutdownEvent ev) throws IOException {
+    void onStop() throws IOException {//@Observes ShutdownEvent ev) throws IOException {
         LOGGER.info("DBus listener is stopping...");
         if (conn != null) {
             conn.close();
