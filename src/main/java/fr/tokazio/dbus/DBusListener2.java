@@ -37,19 +37,19 @@ public class DBusListener2 {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String line = null;
             while ((line = reader.readLine()) != null) {
-                LOGGER.debug("DBus> " + line);
+                //LOGGER.debug("DBus> " + line);
                 if (line.trim().startsWith("signal")) {
-                    LOGGER.debug("New Signal detected");
+                    LOGGER.debug("New Signal detected: '" + line.trim() + "'");
                     if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
                         LOGGER.debug("New unit detected");
                         getNext = true;
                     }
                 }
                 if (getNext) {
-                    LOGGER.debug("New unit detected, wich ?");
+                    LOGGER.debug("New unit detected, wich ? '" + line.trim() + "'");
                     getNext = false;
                     if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
-                        LOGGER.debug("dev-sr0.device detected");
+                        LOGGER.debug("dev-sr0.device detected >>>>>> handle");
                         handle();
                     }
                 }
