@@ -28,7 +28,7 @@ public class DBusListener2 {
     private RipperService ripperService;
 
     void onStart(@Observes StartupEvent ev) throws DBusException {
-        LOGGER.info("DBus listener is starting...");
+        LOGGER.info("DBus system listener is starting...");
         final ProcessBuilder pb = new ProcessBuilder("dbus-monitor", "--system");
         //pb.inheritIO();
         boolean getNext = false;
@@ -38,12 +38,18 @@ public class DBusListener2 {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 LOGGER.debug("DBus> " + line);
-                if (line.trim().startsWith("signal") && line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
-                    getNext = true;
+                if (line.trim().startsWith("signal")) {
+                    LOGGER.debug("New Signal detected");
+                    if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
+                        LOGGER.debug("New unit detected");
+                        getNext = true;
+                    }
                 }
                 if (getNext) {
+                    LOGGER.debug("New unit detected, wich ?");
                     getNext = false;
-                    if (line.trim().startsWith("string") && line.contains("\"dev-sr0.device\"")) {
+                    if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
+                        LOGGER.debug("dev-sr0.device detected");
                         handle();
                     }
                 }
