@@ -1,5 +1,6 @@
 package org.freedesktop.systemd1;
 
+import org.freedesktop.dbus.ObjectPath;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.DBusInterface;
 import org.freedesktop.dbus.messages.DBusSignal;
@@ -439,9 +440,9 @@ public interface Manager extends DBusInterface {
     class UnitNew extends DBusSignal {
         public final String unitName;
 
-        public UnitNew(String path, String unitName)
+        public UnitNew(String path, String unitName, ObjectPath oPath)
                 throws DBusException {
-            super(path, unitName);
+            super(path, unitName, oPath);
             this.unitName = unitName;
         }
 
