@@ -1,6 +1,5 @@
 package fr.tokazio;
 
-import fr.tokazio.dbus.Manager;
 import fr.tokazio.ripper.RipperService;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -8,6 +7,7 @@ import org.boncey.cdripper.RipException;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.DBusSigHandler;
+import org.freedesktop.systemd1.Manager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

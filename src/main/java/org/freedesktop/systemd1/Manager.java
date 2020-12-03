@@ -1,4 +1,4 @@
-package fr.tokazio.dbus;
+package org.freedesktop.systemd1;
 
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.DBusInterface;
@@ -439,9 +439,9 @@ public interface Manager extends DBusInterface {
     class UnitNew extends DBusSignal {
         public final String unitName;
 
-        public UnitNew(String path, String unitName)
+        public UnitNew(String path, String unitName, Object o)
                 throws DBusException {
-            super(path, unitName);
+            super(path, unitName, o);
             this.unitName = unitName;
         }
 
