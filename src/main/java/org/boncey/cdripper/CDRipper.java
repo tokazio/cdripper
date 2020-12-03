@@ -88,7 +88,7 @@ public abstract class CDRipper {
 
              */
         } else {
-            fail(String.format("%s exists; clean up required", tmpDir));
+            throw new RipException(String.format("%s exists; clean up required", tmpDir));
         }
     }
 
