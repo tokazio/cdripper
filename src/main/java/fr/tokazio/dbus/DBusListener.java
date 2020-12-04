@@ -1,7 +1,10 @@
 package fr.tokazio.dbus;
 
 import fr.tokazio.OS;
+import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.ripper.RipperService;
+import fr.tokazio.ripper.RippingSessionException;
 import org.boncey.cdripper.RipException;
 import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.exceptions.DBusException;
@@ -69,8 +72,8 @@ public class DBusListener {
                     if ("dev-sr0.device".equals(s.getUnitName())) {
                         LOGGER.info("A disc was inserted, ripping it...");
                         try {
-                            ripperService.rip();
-                        } catch (IOException | InterruptedException | RipException e) {
+                            ripperService.rip(null);
+                        } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
                             LOGGER.error("Error ripping/encoding", e);
                         }
                     }

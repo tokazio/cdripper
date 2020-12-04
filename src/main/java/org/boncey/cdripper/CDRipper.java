@@ -1,11 +1,6 @@
 package org.boncey.cdripper;
 
-import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.CddbData;
-import fr.tokazio.cddb.discid.DiscId;
-import fr.tokazio.cddb.discid.DiscIdData;
-import fr.tokazio.cddb.discid.DiscIdException;
-import fr.tokazio.ripper.Cddb;
 import org.boncey.cdripper.model.CDInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +27,6 @@ public abstract class CDRipper {
      */
     private static final String EXT = ".wav";
 
-    /**
-     * The temporary directory where we create the CD files.
-     */
-    private static final String TEMP_DIR = "TempDir";//TODO <- timestamp ou rm
-
     private final File _baseDir;
 
     private final List<String> _trackListing;
@@ -51,30 +41,24 @@ public abstract class CDRipper {
     /**
      * Rip the CD.
      *
+     * @return
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public void start() throws RipException, DiscIdException, CDDBException {
-        File tmpDir = new File(_baseDir, TEMP_DIR);
+    public CDRipper start(String tempDir, CddbData cddbData) throws RipException {
+        File tmpDir = new File(_baseDir, tempDir);
         boolean exists = tmpDir.exists() && !tmpDir.delete();
         if (!exists) {
             tmpDir.mkdirs();
-
-            DiscIdData discIdData = new DiscId().getDiscId();
-            CddbData cddbData = new Cddb().getCddb(discIdData);
-
-
-            /*
+            /* TODO by ui!
             File dir;
             if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
                 cdInfo.fromTrackListing(_trackListing);
             } else if (!cdInfo.recognised()) {
                 fail("Unable to recognise disk - provide a track listing file; aborting");
             }
-
              */
 
-            System.out.println(String.format("%s by %s", cddbData.getAlbum(), cddbData.getArtist()));
             File dir = new File(_baseDir, cddbData.getArtist() + "-" + cddbData.getAlbum());
             rip(cddbData, tmpDir);
             dir.mkdirs();
@@ -109,9 +93,9 @@ public abstract class CDRipper {
             }
 
              */
-        } else {
-            throw new RipException(String.format("%s exists; clean up required", tmpDir));
+            return this;
         }
+        throw new RipException(String.format("%s exists; clean up required", tmpDir));
     }
 
 
@@ -211,6 +195,11 @@ public abstract class CDRipper {
     protected abstract CDInfo getCDInfo(File dir)
             throws IOException, InterruptedException;
 
+
+    public int progress() {
+        //TODO handle stdout progress bar to get progress
+        return 0;
+    }
     /**
      * Rip and encode the CD.
      *

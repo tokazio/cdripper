@@ -1,5 +1,10 @@
 package fr.tokazio;
 
+import fr.tokazio.cddb.CDDBException;
+import fr.tokazio.cddb.discid.DiscIdException;
+import fr.tokazio.ripper.RipperService;
+import fr.tokazio.ripper.RippingSessionException;
+import org.boncey.cdripper.RipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +27,25 @@ public class FolderResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlayerResource.class);
 
     @Inject
-    FolderService service;
+    FolderService folderService;
+
+    @Inject
+    RipperService ripperService;
 
     @GET
     public List<Folder> all() {
-        return service.all();
+        return folderService.all();
     }
 
     @Path("/eject")
     @GET
     public void eject() throws IOException, InterruptedException {
-        service.eject();
+        folderService.eject();
+    }
+
+    @Path("/rip")
+    @GET
+    public void rip() throws RipException, CDDBException, DiscIdException, RippingSessionException {
+        ripperService.rip(null);
     }
 }

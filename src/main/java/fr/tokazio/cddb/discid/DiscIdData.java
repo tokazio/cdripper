@@ -1,18 +1,26 @@
 package fr.tokazio.cddb.discid;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-public class DiscIdData {
+public class DiscIdData implements Serializable {
 
+    @JsonIgnore
     private static final Logger LOGGER = LoggerFactory.getLogger(DiscIdData.class);
 
+    @JsonProperty
     private final String discId;
+    @JsonProperty
     private final int nbTracks;
+    @JsonProperty
     private final Integer[] frameOffsets;
+    @JsonProperty
     private final int totalLengthInSec;
 
     //It outputs the discid, the number

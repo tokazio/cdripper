@@ -1,9 +1,9 @@
 package fr.tokazio.dbus;
 
-import fr.tokazio.ripper.RipperService;
+import fr.tokazio.events.CDinsertedEvent;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.StartupEvent;
-import org.boncey.cdripper.RipException;
+import io.vertx.core.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,44 +25,61 @@ public class DBusListener2 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBusListener.class);
 
     @Inject
-    private RipperService ripperService;
+    EventBus bus;
+
+    //  @Inject
+    //  RipperService ripperService;
 
     void onStart(@Observes StartupEvent ev) throws DBusException {
         LOGGER.info("DBus system listener is starting...");
         final ProcessBuilder pb = new ProcessBuilder("dbus-monitor", "--system");
         //pb.inheritIO();
-        boolean getNext = false;
+
         try {
             final Process proc = pb.start();
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            while (proc.isAlive()) {
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    //LOGGER.debug("DBus> " + line);
-                    if (line.trim().startsWith("signal")) {
-                        LOGGER.debug("New Signal detected: '" + line.trim() + "'");
-                        if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
-                            LOGGER.debug("New unit detected");
-                            getNext = true;
-                            break;
-                        }
-                    }
-                    if (getNext) {
-                        LOGGER.debug("New unit detected, wich ? '" + line.trim() + "'");
-                        getNext = false;
-                        if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
-                            LOGGER.debug("dev-sr0.device detected >>>>>> handle");
-                            handle();
+            new Thread() {
+
+                @Override
+                public void run() {
+                    boolean getNext = false;
+                    while (proc.isAlive()) {
+                        String line = null;
+                        try {
+                            while ((line = reader.readLine()) != null) {
+                                //LOGGER.debug("DBus> " + line);
+                                if (line.trim().startsWith("signal")) {
+                                    LOGGER.debug("New Signal detected: '" + line.trim() + "'");
+                                    if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
+                                        LOGGER.debug("New unit detected");
+                                        getNext = true;
+                                        break;
+                                    }
+                                }
+                                if (getNext) {
+                                    LOGGER.debug("New unit detected, wich ? '" + line.trim() + "'");
+                                    getNext = false;
+                                    if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
+                                        LOGGER.debug("dev-sr0.device detected >>>>>> handle");
+                                        //handle();
+                                        bus.publish(CDinsertedEvent.EVENT_NAME, new CDinsertedEvent());
+                                    }
+                                }
+                            }
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
                         }
                     }
                 }
-            }
+            }.start();
+
             proc.waitFor();
         } catch (IOException | InterruptedException ex) {
             throw new DBusException(ex);
         }
     }
 
+    /*
     private void handle() {
         LOGGER.info("A disc was inserted, ripping it...");
         try {
@@ -71,6 +88,8 @@ public class DBusListener2 {
             LOGGER.error("Error ripping/encoding", e);
         }
     }
+
+     */
 }
 
 /*

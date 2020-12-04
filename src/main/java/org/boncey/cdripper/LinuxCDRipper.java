@@ -65,7 +65,7 @@ public class LinuxCDRipper extends CDRipper {
      * @throws IOException          if unable to interact with the external processes.
      * @throws InterruptedException if this thread is interrupted.
      */
-    public LinuxCDRipper(File baseDir, List<String> trackListing) throws IOException, InterruptedException {
+    public LinuxCDRipper(File baseDir, List<String> trackListing) {
         super(baseDir, trackListing);
     }
 
@@ -166,4 +166,5 @@ public class LinuxCDRipper extends CDRipper {
 
         return cdInfo;
     }
+
 }

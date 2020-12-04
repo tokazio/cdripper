@@ -22,6 +22,7 @@ public class DiscogsService {
     private static final String CONSUMER_KEY = "qrwjUeBmOaGjweCplcaj";
     private static final String CONSUMER_SECRET = "OUIgMEYWsgeHvuThZKMZVlAHHASGDpIM";
     private static final String CALLBACK_URL = "http://127.0.0.1:8080/discogs/callback";
+
     @Inject
     ObjectMapper mapper;
     private DiscogsClient client;
