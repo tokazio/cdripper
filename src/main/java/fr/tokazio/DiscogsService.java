@@ -21,7 +21,7 @@ public class DiscogsService {
     private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36";
     private static final String CONSUMER_KEY = "qrwjUeBmOaGjweCplcaj";
     private static final String CONSUMER_SECRET = "OUIgMEYWsgeHvuThZKMZVlAHHASGDpIM";
-    private static final String CALLBACK_URL = "http://127.0.0.1:8080/discogs/callback";
+    private static final String CALLBACK_URL = "http://192.168.1.51:8080/discogs/callback";
 
     @Inject
     ObjectMapper mapper;
