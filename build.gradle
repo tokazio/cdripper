@@ -21,8 +21,8 @@ dependencies {
 
     implementation 'fr.tokazio:FileCollector:1.0-SNAPSHOT'
 
-//    implementation 'io.netty:netty-transport-native-epoll'
-//    implementation 'io.netty:netty-transport-native-kqueue'
+    implementation 'io.netty:netty-transport-native-epoll'
+    implementation 'io.netty:netty-transport-native-kqueue'
 
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'

@@ -2,12 +2,10 @@ package fr.tokazio.dbus;
 
 import fr.tokazio.OS;
 import fr.tokazio.events.CDinsertedEvent;
-import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.StartupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -19,8 +17,8 @@ import java.io.InputStreamReader;
 /**
  * @link https://dbus.freedesktop.org/doc/dbus-monitor.1.html
  */
-@Startup
-@ApplicationScoped
+//@Startup
+//@ApplicationScoped
 public class DBusListener2 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBusListener.class);
