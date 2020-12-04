@@ -16,7 +16,7 @@ import java.util.List;
 public class DeviceResource {
 
     @Inject
-    private DeviceService service;
+    DeviceService service;
 
     @GET
     public List<Device> devices() {

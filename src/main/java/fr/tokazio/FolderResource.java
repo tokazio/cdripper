@@ -5,8 +5,6 @@ import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.ripper.RipperService;
 import fr.tokazio.ripper.RippingSessionException;
 import org.boncey.cdripper.RipException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,8 +21,6 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class FolderResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlayerResource.class);
 
     @Inject
     FolderService folderService;
