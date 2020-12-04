@@ -52,6 +52,7 @@ public class FolderResource {
                 e.printStackTrace();
             }
         });
+        future.join();
         return future;
     }
 }
