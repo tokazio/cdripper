@@ -2,10 +2,14 @@ package fr.tokazio.dbus;
 
 import fr.tokazio.OS;
 import fr.tokazio.events.CDinsertedEvent;
+import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.StartupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,8 +19,8 @@ import java.io.InputStreamReader;
 /**
  * @link https://dbus.freedesktop.org/doc/dbus-monitor.1.html
  */
-//@Startup
-//@ApplicationScoped
+@Startup
+@ApplicationScoped
 public class DBusListener2 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBusListener.class);
@@ -30,8 +34,8 @@ public class DBusListener2 {
     //  @Inject
     //  RipperService ripperService;
 
-    void onStart() throws DBusException { //@Observes StartupEvent ev) throws DBusException {
-        LOGGER.info("DBus system listener is starting...");
+    void onStart(@Observes StartupEvent ev) throws DBusException {
+        LOGGER.info("DBus system listener (2) is starting...");
         if (!OS.isUnix()) {
             LOGGER.warn("DBus not supported with this OS");
             return;
@@ -42,20 +46,20 @@ public class DBusListener2 {
         try {
             final Process proc = pb.start();
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            new Thread() {
+            //  new Thread() {
 
-                @Override
-                public void run() {
-                    boolean getNext = false;
-                    while (proc.isAlive()) {
-                        String line = null;
-                        try {
-                            while ((line = reader.readLine()) != null) {
-                                //LOGGER.debug("DBus> " + line);
-                                if (line.trim().startsWith("signal")) {
-                                    LOGGER.debug("New Signal detected: '" + line.trim() + "'");
-                                    if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
-                                        LOGGER.debug("New unit detected");
+            //    @Override
+            //    public void run() {
+            boolean getNext = false;
+            while (proc.isAlive()) {
+                String line = null;
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        //LOGGER.debug("DBus> " + line);
+                        if (line.trim().startsWith("signal")) {
+                            LOGGER.debug("New Signal detected: '" + line.trim() + "'");
+                            if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
+                                LOGGER.debug("New unit detected");
                                         getNext = true;
                                         break;
                                     }
@@ -72,13 +76,13 @@ public class DBusListener2 {
 
                                     }
                                 }
-                            }
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                        }
                     }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
-            }.start();
+            }
+            //  }
+            //}.start();
 
             proc.waitFor();
         } catch (IOException | InterruptedException ex) {
