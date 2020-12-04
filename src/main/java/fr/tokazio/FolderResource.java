@@ -15,8 +15,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 @Path("/folders")
 @Produces(MediaType.APPLICATION_JSON)
@@ -43,16 +41,7 @@ public class FolderResource {
 
     @Path("/rip")
     @GET
-    public CompletionStage<Void> rip() {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        future.thenRunAsync(() -> {
-            try {
-                ripperService.rip(null);
-            } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
-                e.printStackTrace();
-            }
-        });
-        future.join();
-        return future;
+    public void rip() throws DiscIdException, RippingSessionException, CDDBException, RipException {
+        ripperService.rip(null);
     }
 }
