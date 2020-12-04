@@ -42,6 +42,16 @@ public class FolderResource {
     @Path("/rip")
     @GET
     public void rip() throws DiscIdException, RippingSessionException, CDDBException, RipException {
-        ripperService.rip(null);
+        new Thread() {
+
+            public void run() {
+                try {
+                    ripperService.rip(null);
+                } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
     }
 }
