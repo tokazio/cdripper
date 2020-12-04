@@ -143,8 +143,9 @@ public abstract class CDRipper {
                     } else {
                         System.out.println("Done ripping " + wavFile.getAbsolutePath());
                         if (trackRippedlistener != null) {
-                            System.out.println("trackRippedlistener.done...");
+                            System.out.println("entering trackRippedlistener...");
                             trackRippedlistener.done(wavFile);
+                            System.out.println("trackRippedlistener.done...");
                         } else {
                             System.out.println("No trackRippedlistener, go to next track...");
                         }

@@ -127,7 +127,10 @@ public class RippingSession implements Serializable {
         ripper = provideRipper(baseDir)
                 .setTrackRippedListener(file -> {
                     //bus.publish("ripping-track-end", file);
-                    final Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
+                    File dest = new File("encoded");
+                    LOGGER.debug("Flac encoder to " + dest.getAbsolutePath());
+                    final Encoder encoder = new FlacEncoder(monitor, dest);
+                    LOGGER.debug("Preparing encoding for " + file.getAbsolutePath() + " (baseDir: " + baseDir.getAbsolutePath() + ")");
                     final Track track = Track.createTrack(file, baseDir, "flac");
                     encoder.queue(track, false);
                     LOGGER.debug("Will encode " + file.getName() + " to FLAC...");
