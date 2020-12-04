@@ -9,6 +9,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * https://github.com/ajdons/discogs4j
@@ -21,7 +23,6 @@ public class DiscogsService {
     private static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36";
     private static final String CONSUMER_KEY = "qrwjUeBmOaGjweCplcaj";
     private static final String CONSUMER_SECRET = "OUIgMEYWsgeHvuThZKMZVlAHHASGDpIM";
-    private static final String CALLBACK_URL = "http://192.168.1.31:8080/discogs/callback";
 
     @Inject
     ObjectMapper mapper;
@@ -44,7 +45,7 @@ public class DiscogsService {
         client = new DiscogsClient(USER_AGENT);
         client.setConsumerKey(CONSUMER_KEY);
         client.setConsumerSecret(CONSUMER_SECRET);
-        client.setCallbackUrl(CALLBACK_URL);
+        client.setCallbackUrl(getCallbackUrl());
 
         client.getRequestToken();
 
@@ -52,6 +53,16 @@ public class DiscogsService {
         //TODO automatiser
         LOGGER.warn("!!!!!!!!!!!!!!!!\nCliquez ici pour autoriser: " + url + "\n!!!!!!!!!!!!!!!!");
 
+    }
+
+    private String getCallbackUrl() {
+        try {
+            InetAddress adr = InetAddress.getLocalHost();
+            return "http://" + adr.getHostAddress() + ":8080/discogs/callback";
+        } catch (UnknownHostException ex) {
+            LOGGER.warn("Can't get the ip address", ex);
+        }
+        return "http://127.0.0.1:8080/discogs/callback";
     }
 
     public void callback(String token, String verifier) {

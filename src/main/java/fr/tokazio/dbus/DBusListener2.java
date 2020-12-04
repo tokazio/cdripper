@@ -1,5 +1,6 @@
 package fr.tokazio.dbus;
 
+import fr.tokazio.OS;
 import fr.tokazio.events.CDinsertedEvent;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.StartupEvent;
@@ -35,6 +36,10 @@ public class DBusListener2 {
 
     void onStart(@Observes StartupEvent ev) throws DBusException {
         LOGGER.info("DBus system listener is starting...");
+        if (!OS.isUnix()) {
+            LOGGER.warn("DBus not supported with this OS");
+            return;
+        }
         final ProcessBuilder pb = new ProcessBuilder("dbus-monitor", "--system");
         //pb.inheritIO();
 
