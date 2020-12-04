@@ -2,6 +2,7 @@ package fr.tokazio.dbus;
 
 import fr.tokazio.OS;
 import fr.tokazio.events.CDinsertedEvent;
+import io.quarkus.runtime.Startup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,7 @@ import java.io.InputStreamReader;
 /**
  * @link https://dbus.freedesktop.org/doc/dbus-monitor.1.html
  */
-//@Startup
+@Startup
 @ApplicationScoped
 public class DBusListener2 {
 
@@ -28,6 +29,10 @@ public class DBusListener2 {
 
     //  @Inject
     //  RipperService ripperService;
+
+    DBusListener2() throws DBusException {
+        onStart();
+    }
 
     void onStart() throws DBusException {//@Observes StartupEvent ev) throws DBusException {
         LOGGER.info("DBus system listener (2) is starting...");

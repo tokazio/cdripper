@@ -55,13 +55,15 @@ public class DiscogsService {
     }
 
     static String getCallbackUrl() {
+        String url = "http://127.0.0.1:8080/discogs/callback";
         try {
             InetAddress adr = InetAddress.getLocalHost();
-            return "http://" + adr.getHostAddress() + ":8080/discogs/callback";
+            url = "http://" + adr.getHostAddress() + ":8080/discogs/callback";
         } catch (UnknownHostException ex) {
             LOGGER.warn("Can't get the ip address", ex);
         }
-        return "http://127.0.0.1:8080/discogs/callback";
+        LOGGER.debug("Discogs callback url is " + url);
+        return url;
     }
 
     public void callback(String token, String verifier) {
