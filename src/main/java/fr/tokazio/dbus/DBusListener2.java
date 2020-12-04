@@ -8,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,8 +26,8 @@ public class DBusListener2 {
     //@Inject
     //EventBus bus;
 
-    @Inject
-    Event<CDinsertedEvent> event;
+    //@Inject
+    //Event<CDinsertedEvent> event;
 
     //  @Inject
     //  RipperService ripperService;
@@ -71,7 +69,7 @@ public class DBusListener2 {
                                         LOGGER.debug("dev-sr0.device detected >>>>>> handle");
                                         //handle();
                                         CDinsertedEvent message = new CDinsertedEvent();
-                                        event.fireAsync(message);
+                                        //event.fireAsync(message);
                                         //bus.publish(CDinsertedEvent.EVENT_NAME, message);
 
                                     }
