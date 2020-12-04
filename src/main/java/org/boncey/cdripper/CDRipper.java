@@ -126,7 +126,7 @@ public abstract class CDRipper {
             try {
                 File wavFile = new File(baseDir, trackName);
                 File tempFile = File.createTempFile("wav", null, baseDir);
-                System.out.println(String.format("Ripping %s (%s)", tempFile.getName(), wavFile.getName()));
+                System.out.println(String.format("Ripping %s (to %s)", tempFile.getAbsolutePath(), wavFile.getAbsolutePath()));
 
                 //osx "-e"
                 //linux "-e" et "-E"
@@ -136,10 +136,10 @@ public abstract class CDRipper {
                 Process proc = pb.start();
                 proc.waitFor();
                 if (proc.exitValue() != 0) {
-                    System.err.println("Unable to rip " + tempFile);
+                    System.err.println("\nError ripping to " + tempFile.getAbsolutePath());
                 } else {
                     if (!tempFile.renameTo(wavFile)) {
-                        System.err.println("Unable to rename " + tempFile.getName() + " to " + wavFile.getName());
+                        System.err.println("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
                     } else {
                         System.out.println("Done ripping " + wavFile.getAbsolutePath());
                         if (trackRippedlistener != null) {
