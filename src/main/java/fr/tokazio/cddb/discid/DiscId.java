@@ -1,5 +1,9 @@
 package fr.tokazio.cddb.discid;
 
+import fr.tokazio.OS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,9 +27,11 @@ import java.util.StringJoiner;
 public class DiscId {
 
     public static final String CD_DISCID = "cd-discid";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiscId.class);
 
     public DiscIdData getDiscId() throws DiscIdException {
-        final ProcessBuilder pb = new ProcessBuilder(CD_DISCID);
+        final String cmd = getCmd();
+        final ProcessBuilder pb = new ProcessBuilder(cmd.split("\\s"));
         //pb.inheritIO();
         String result = "";
         try {
@@ -36,12 +42,27 @@ public class DiscId {
             result = sj.toString();
             proc.waitFor();
             if (proc.exitValue() != 0) {
+                LOGGER.error(cmd + ": " + proc.exitValue() + "=" + result);
+                if (proc.exitValue() == 1) {
+                    throw new DiscIdException(cmd + ": Operation not permitted");
+                }
+                if (proc.exitValue() == 2) {
+                    throw new DiscIdException(cmd + ": No such file or directory");
+                }
                 throw new DiscIdException(result);
             }
             return new DiscIdData(result);
         } catch (IOException | InterruptedException ex) {
+            LOGGER.error(cmd + ": " + result, ex);
             throw new DiscIdException(ex);
         }
+    }
+
+    private String getCmd() {
+        if (OS.isMac()) {
+            return CD_DISCID + " /dev/rdisk2";
+        }
+        return CD_DISCID;
     }
 
 }

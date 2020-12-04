@@ -46,7 +46,7 @@ public abstract class CDRipper {
      * @throws InterruptedException if this thread is interrupted.
      */
     public CDRipper start(String tempDir, CddbData cddbData) throws RipException {
-        File tmpDir = new File(_baseDir, tempDir);
+        File tmpDir = new File(tempDir);
         boolean exists = tmpDir.exists() && !tmpDir.delete();
         if (!exists) {
             tmpDir.mkdirs();
@@ -127,7 +127,7 @@ public abstract class CDRipper {
                 File wavFile = new File(baseDir, trackName);
                 File tempFile = File.createTempFile("wav", null, baseDir);
                 System.out.println(String.format("Ripping %s (%s)", tempFile.getName(), wavFile.getName()));
-                ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-e", "-E", "-z", String.valueOf(index), tempFile.getAbsolutePath());
+                ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-e", "-z", String.valueOf(index), tempFile.getAbsolutePath());
                 pb.inheritIO();//ça c'est cool
                 Process proc = pb.start();
                 proc.waitFor();

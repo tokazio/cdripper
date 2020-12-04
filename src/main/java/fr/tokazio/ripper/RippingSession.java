@@ -48,12 +48,13 @@ public class RippingSession implements Serializable {
     @JsonIgnore
     private CDRipper ripper;
     @JsonProperty
-    private State state = State.STARTED;
+    private State state = State.NEW;
 
     public void start() throws RippingSessionException, DiscIdException, CDDBException, RipException {
-        if (!state.equals(State.TERMINATED)) {
+        if (!state.equals(State.NEW)) {
             throw new RippingSessionException("Ripping session already started: " + state.name());
         }
+        state = State.STARTED;
         LOGGER.info("Started ripping session #" + uuid);
         run();
     }
@@ -82,7 +83,7 @@ public class RippingSession implements Serializable {
                 getAlbumMetas();
                 break;
             case RIPPING_STARTED:
-                //TODO previous ripping was started, resume it
+                //ripping in progress
                 break;
             case TERMINATED:
                 LOGGER.info("Ripping session #" + uuid + " for discid " + discId() + " is terminated");
@@ -101,21 +102,28 @@ public class RippingSession implements Serializable {
         return uuid;
     }
 
-    private void findDiscId() throws DiscIdException {
+    private void findDiscId() throws DiscIdException, CDDBException, RippingSessionException, RipException {
         this.state = State.DISCIID;
         this.discIdData = new DiscId().getDiscId();
         LOGGER.info("Ripping session #" + uuid + ": discid is " + discId());
+        run();
     }
 
-    private void findCddb() throws CDDBException {
+    private void findCddb() throws CDDBException, RipException, DiscIdException, RippingSessionException {
         this.state = State.CDDB;
         this.cddbData = new Cddb().getCddb(this.discIdData);
         LOGGER.info("Ripping session #" + uuid + ": " + cddbData.getAlbum() + " by " + cddbData.getArtist());
+        run();
     }
 
     private void rip() throws RipException {
         this.state = State.RIPPING_STARTED;
-        final File baseDir = new File("/root");
+        final File baseDir = new File("/audio");
+
+        if (!baseDir.exists()) {
+            baseDir.mkdirs();
+        }
+
         ripper = provideRipper(baseDir)
                 .setTrackRippedListener(file -> {
                     //bus.publish("ripping-track-end", file);
@@ -158,7 +166,7 @@ public class RippingSession implements Serializable {
     }
 
     enum State {
-        UNDEFINED, STARTED, DISCIID, CDDB, RIPPING_STARTED, TERMINATED;
+        UNDEFINED, NEW, STARTED, DISCIID, CDDB, RIPPING_STARTED, TERMINATED;
     }
 
 

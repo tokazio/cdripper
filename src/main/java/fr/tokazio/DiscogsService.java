@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,8 +23,8 @@ public class DiscogsService {
     private static final String CONSUMER_KEY = "qrwjUeBmOaGjweCplcaj";
     private static final String CONSUMER_SECRET = "OUIgMEYWsgeHvuThZKMZVlAHHASGDpIM";
 
-    @Inject
-    ObjectMapper mapper;
+    ObjectMapper mapper = new ObjectMapper();
+
     private DiscogsClient client;
 
     public DiscogsService() {
