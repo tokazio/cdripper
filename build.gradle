@@ -16,11 +16,13 @@ dependencies {
     implementation 'io.quarkus:quarkus-resteasy'
     implementation 'io.quarkus:quarkus-resteasy-jackson'
     implementation 'io.quarkus:quarkus-undertow-websockets'
-    implementation 'io.quarkus:quarkus-vertx'
-
+//    implementation 'io.quarkus:quarkus-vertx'
     compile group: 'com.github.hypfvieh', name: 'dbus-java', version: '3.2.3'
 
     implementation 'fr.tokazio:FileCollector:1.0-SNAPSHOT'
+
+    implementation 'io.netty:netty-transport-native-epoll'
+    implementation 'io.netty:netty-transport-native-kqueue'
 
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'

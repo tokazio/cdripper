@@ -6,19 +6,21 @@ import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.events.CDinsertedEvent;
-import fr.tokazio.events.Event;
-import io.quarkus.vertx.ConsumeEvent;
 import org.boncey.cdripper.RipException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.ObservesAsync;
 import javax.inject.Inject;
 
 @ApplicationScoped
 public class RipperService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RipperService.class);
+
+    //@Inject
+    //EventBus bus;
 
     @Inject
     RippingSessionFactory rippingSessionFactory;
@@ -31,8 +33,11 @@ public class RipperService {
         return new Cddb().getCddb(discIdData);
     }
 
-    @ConsumeEvent(value = CDinsertedEvent.EVENT_NAME, blocking = true)
-    public void rip(Event event) throws RipException, CDDBException, DiscIdException, RippingSessionException {
+
+    //    @ConsumeEvent(value = CDinsertedEvent.EVENT_NAME, blocking = true)
+    public void rip(@ObservesAsync CDinsertedEvent event) throws RipException, CDDBException, DiscIdException, RippingSessionException {
+
+
         rippingSessionFactory.resume();
     }
 

@@ -3,11 +3,11 @@ package fr.tokazio.dbus;
 import fr.tokazio.events.CDinsertedEvent;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.io.BufferedReader;
@@ -24,8 +24,11 @@ public class DBusListener2 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBusListener.class);
 
+    //@Inject
+    //EventBus bus;
+
     @Inject
-    EventBus bus;
+    Event<CDinsertedEvent> event;
 
     //  @Inject
     //  RipperService ripperService;
@@ -62,7 +65,10 @@ public class DBusListener2 {
                                     if (line.trim().startsWith("string") && line.contains("dev-sr0.device")) {
                                         LOGGER.debug("dev-sr0.device detected >>>>>> handle");
                                         //handle();
-                                        bus.publish(CDinsertedEvent.EVENT_NAME, new CDinsertedEvent());
+                                        CDinsertedEvent message = new CDinsertedEvent();
+                                        event.fireAsync(message);
+                                        //bus.publish(CDinsertedEvent.EVENT_NAME, message);
+
                                     }
                                 }
                             }

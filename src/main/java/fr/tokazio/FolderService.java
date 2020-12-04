@@ -29,10 +29,8 @@ public class FolderService {
 
     }
 
-    public void eject() throws InterruptedException, IOException {
-        Runtime rt = Runtime.getRuntime();
+    public void eject() throws IOException {
         LOGGER.info("Ejecting: eject");
-        Process proc = rt.exec("eject", null);
-        proc.waitFor();
+        final Process proc = Runtime.getRuntime().exec("eject", null);
     }
 }

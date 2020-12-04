@@ -9,7 +9,6 @@ import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
-import io.vertx.core.eventbus.EventBus;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
@@ -38,8 +37,8 @@ public class RippingSession implements Serializable {
     private final String uuid = UUID.randomUUID().toString();
     @JsonIgnore
     private final Encoded monitor = new FileDeletingTrackMonitor();
-    @Inject
-    EventBus bus;
+    //@Inject
+    //EventBus bus;
     @Inject
     DiscogsService discogsService;
     @JsonProperty
@@ -119,7 +118,7 @@ public class RippingSession implements Serializable {
         final File baseDir = new File("/root");
         ripper = provideRipper(baseDir)
                 .setTrackRippedListener(file -> {
-                    bus.publish("ripping-track-end", file);
+                    //bus.publish("ripping-track-end", file);
                     final Encoder encoder = new FlacEncoder(monitor, new File("encoded"));
                     final Track track = Track.createTrack(file, baseDir, "flac");
                     encoder.queue(track, false);
@@ -129,12 +128,12 @@ public class RippingSession implements Serializable {
                 .setEndListener(new Function() {
                     @Override
                     public Object apply(Object o) {
-                        bus.publish("ripping-disc-end", this);
+                        //bus.publish("ripping-disc-end", this);
                         return null;
                     }
                 })
                 .start(this.uuid, this.cddbData);
-        bus.publish("ripping-disc-start", this);
+        //bus.publish("ripping-disc-start", this);
     }
 
     private void getTrackMetas(final String artist, String title) {

@@ -39,7 +39,7 @@ public class FolderResource {
 
     @Path("/eject")
     @GET
-    public void eject() throws IOException, InterruptedException {
+    public void eject() throws IOException {
         folderService.eject();
     }
 
