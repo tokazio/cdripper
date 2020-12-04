@@ -54,7 +54,7 @@ public class DiscogsService {
 
     }
 
-    private String getCallbackUrl() {
+    static String getCallbackUrl() {
         try {
             InetAddress adr = InetAddress.getLocalHost();
             return "http://" + adr.getHostAddress() + ":8080/discogs/callback";

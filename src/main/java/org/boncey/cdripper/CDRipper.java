@@ -127,7 +127,11 @@ public abstract class CDRipper {
                 File wavFile = new File(baseDir, trackName);
                 File tempFile = File.createTempFile("wav", null, baseDir);
                 System.out.println(String.format("Ripping %s (%s)", tempFile.getName(), wavFile.getName()));
-                ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-e", "-z", String.valueOf(index), tempFile.getAbsolutePath());
+
+                //osx "-e"
+                //linux "-e" et "-E"
+
+                ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-z", String.valueOf(index), tempFile.getAbsolutePath());
                 pb.inheritIO();//ça c'est cool
                 Process proc = pb.start();
                 proc.waitFor();
