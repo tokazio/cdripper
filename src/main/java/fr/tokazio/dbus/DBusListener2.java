@@ -39,26 +39,27 @@ public class DBusListener2 {
             LOGGER.warn("DBus not supported with this OS");
             return;
         }
-        final ProcessBuilder pb = new ProcessBuilder("dbus-monitor", "--system");
-        //pb.inheritIO();
 
-        try {
-            final Process proc = pb.start();
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            //  new Thread() {
+        new Thread() {
 
-            //    @Override
-            //    public void run() {
-            boolean getNext = false;
-            while (proc.isAlive()) {
-                String line = null;
+            @Override
+            public void run() {
                 try {
-                    while ((line = reader.readLine()) != null) {
-                        //LOGGER.debug("DBus> " + line);
-                        if (line.trim().startsWith("signal")) {
-                            LOGGER.debug("New Signal detected: '" + line.trim() + "'");
-                            if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
-                                LOGGER.debug("New unit detected");
+                    final ProcessBuilder pb = new ProcessBuilder("dbus-monitor", "--system");
+                    //pb.inheritIO();
+                    final Process proc = pb.start();
+                    final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+                    boolean getNext = false;
+                    while (proc.isAlive()) {
+                        String line = null;
+                        try {
+                            while ((line = reader.readLine()) != null) {
+                                //LOGGER.debug("DBus> " + line);
+                                if (line.trim().startsWith("signal")) {
+                                    LOGGER.debug("New Signal detected: '" + line.trim() + "'");
+                                    if (line.contains("interface=org.freedesktop.systemd1.Manager; member=UnitNew")) {
+                                        LOGGER.debug("New unit detected");
                                         getNext = true;
                                         break;
                                     }
@@ -75,18 +76,17 @@ public class DBusListener2 {
 
                                     }
                                 }
+                            }
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
                     }
-                } catch (IOException ex) {
+                    proc.waitFor();
+                } catch (IOException | InterruptedException ex) {
                     ex.printStackTrace();
                 }
             }
-            //  }
-            //}.start();
-
-            proc.waitFor();
-        } catch (IOException | InterruptedException ex) {
-            throw new DBusException(ex);
-        }
+        }.start();
     }
 
     /*
