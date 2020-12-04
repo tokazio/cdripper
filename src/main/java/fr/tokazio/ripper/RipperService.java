@@ -41,5 +41,7 @@ public class RipperService {
         rippingSessionFactory.resume();
     }
 
-
+    public String status() {
+        return rippingSessionFactory.currentSession().state().name();
+    }
 }

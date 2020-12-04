@@ -17,10 +17,21 @@ public class RippingSessionFactory {
 
     private final Map<String, RippingSession> sessions = new HashMap<>();
 
+    private RippingSession currentSession;
+
     @Inject
     Instance<RippingSession> provider;
 
     public RippingSession resume() throws CDDBException, RippingSessionException, DiscIdException, RipException {
+        this.currentSession = doResume();
+        return this.currentSession;
+    }
+
+    private RippingSession doResume() throws CDDBException, RippingSessionException, DiscIdException, RipException {
+        if (currentSession != null) {
+            currentSession.run();
+            return currentSession;
+        }
         //no session started
         if (sessions.isEmpty()) {
             return provideNew();
@@ -54,5 +65,9 @@ public class RippingSessionFactory {
 
     private DiscIdData getDiscId() throws DiscIdException {
         return new DiscId().getDiscId();
+    }
+
+    public RippingSession currentSession() {
+        return null;
     }
 }

@@ -157,6 +157,7 @@ public class Track
             relativeBasePath = tidyTrackPath(wavFileParentDir.getName());
             track = new Track(wavFile, artist, album, trackName, relativeBasePath);
         }
+        /*
         else
         {
             // iTunes style 'Artist/Album'
@@ -172,6 +173,8 @@ public class Track
                 track = new Track(wavFile, artist, album, trackName, relativeBasePath);
             }
         }
+
+         */
 
         return track;
     }
