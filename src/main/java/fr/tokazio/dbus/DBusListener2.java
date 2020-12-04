@@ -2,12 +2,10 @@ package fr.tokazio.dbus;
 
 import fr.tokazio.OS;
 import fr.tokazio.events.CDinsertedEvent;
-import io.quarkus.runtime.StartupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,7 +29,7 @@ public class DBusListener2 {
     //  @Inject
     //  RipperService ripperService;
 
-    void onStart(@Observes StartupEvent ev) throws DBusException {
+    void onStart() throws DBusException {//@Observes StartupEvent ev) throws DBusException {
         LOGGER.info("DBus system listener (2) is starting...");
         if (!OS.isUnix()) {
             LOGGER.warn("DBus not supported with this OS");
