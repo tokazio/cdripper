@@ -64,7 +64,7 @@ public class CDParanoia {
         final String[] cmd = args.toArray(new String[0]);
         LOGGER.info("Ripping command: " + Arrays.toString(cmd));
         final ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.inheritIO();//ça c'est cool
+        //pb.inheritIO();//ça c'est cool
         final Process proc = pb.start();
         Thread t1 = new Thread() {
             public void run() {
