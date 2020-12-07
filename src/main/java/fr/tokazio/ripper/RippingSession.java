@@ -113,10 +113,19 @@ public class RippingSession implements Serializable {
 
     private void rip() throws RipException {
         this.state = State.RIPPING_STARTED;
-        final File rippingDir = new File("/audio");
+        File rippingDir;
+
+        if (OS.isMac()) {
+            rippingDir = new File("/users/romain/audio");
+        } else {
+            rippingDir = new File("/audio");
+        }
 
         if (!rippingDir.exists()) {
-            rippingDir.mkdirs();
+            LOGGER.debug("Creating ripping dir " + rippingDir.getAbsolutePath());
+            if (!rippingDir.mkdirs()) {
+                LOGGER.error("Error creating ripping dir " + rippingDir.getAbsolutePath());
+            }
         }
 
         ripper = provideRipper(rippingDir)
@@ -131,8 +140,9 @@ public class RippingSession implements Serializable {
                     public void ripped() {
                         //bus.publish("ripping-disc-end", this);
                     }
-                })
-                .start(this.cddbData);
+                });
+        LOGGER.info("Ripping with " + ripper.getClass().getName());
+        ripper.start(this.cddbData);
         //bus.publish("ripping-disc-start", this);
     }
 

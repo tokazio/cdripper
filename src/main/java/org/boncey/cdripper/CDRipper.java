@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,18 +24,26 @@ public abstract class CDRipper {
         LOGGER.debug("Ripping to folder " + rippingDir.getAbsolutePath() + "...");
         if (!rippingDir.exists()) {
             LOGGER.warn("The ripping dir " + rippingDir + " doesn't exists, creating it...");
-            rippingDir.mkdirs();
+            if (!rippingDir.mkdirs()) {
+                LOGGER.error("Error creating riping dir: " + rippingDir.getAbsolutePath());
+            }
         }
         this.rippingDir = rippingDir;
     }
 
     public CDRipper start(final CddbData cddbData) throws RipException {
         final File tmpDir = new File(rippingDir, "/tmp");
+        LOGGER.debug("Start ripping to temp dir: " + tmpDir.getAbsolutePath());
         if (!tmpDir.exists()) {
-            tmpDir.mkdirs();
+            if (!tmpDir.mkdirs()) {
+                LOGGER.error("Error creating temp dir: " + tmpDir.getAbsolutePath());
+            }
         } else {
+            LOGGER.error("Temp dir " + tmpDir.getAbsolutePath() + " exists, cleaning it...");
             tmpDir.delete();
-            //TODO delete failed...
+            //TODO delete failed
+            tmpDir.mkdirs();
+            //TODO create failed
         }
             /* TODO by ui!
             File dir;
@@ -51,12 +60,10 @@ public abstract class CDRipper {
         toDir.mkdirs();
         tmpDir.renameTo(toDir);
         return this;
-
-//        throw new RipException(String.format("%s exists; clean up required", tmpDir));
     }
 
     private void rip(final CddbData discData, final File tmpDir) throws RipException {
-
+        LOGGER.debug("Ripping " + discData.getTracks().size() + " track to " + tmpDir.getAbsolutePath() + "...");
         discData.getTracks().forEach(trackData -> {
             try {
                 final String trackName = trackData.getIndex() + "-" + trackData.getArtist() + "-" + trackData.getTitle() + EXT;
@@ -68,7 +75,15 @@ public abstract class CDRipper {
                 //TODO osx "-e"
                 //TODO linux "-e" et "-E"
 
-                final ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-z", String.valueOf(trackData.getIndex()), tempFile.getAbsolutePath());
+                final String[] cmd = {
+                        getRipCommand(),
+                        "-v",
+                        "-z",
+                        String.valueOf(Integer.parseInt(trackData.getIndex()) + 1),
+                        tempFile.getAbsolutePath()
+                };
+                LOGGER.info("Ripping command: " + Arrays.toString(cmd));
+                final ProcessBuilder pb = new ProcessBuilder(cmd);
                 pb.inheritIO();//ça c'est cool
                 Process proc = pb.start();
                 proc.waitFor();
@@ -89,7 +104,7 @@ public abstract class CDRipper {
                     }
                 }
             } catch (IOException | InterruptedException ex) {
-                LOGGER.error("Error ripping disc", ex);
+                LOGGER.error("Error ripping disc to " + tmpDir.getAbsolutePath(), ex);
             }
         });
         if (discRippedListener != null) {
