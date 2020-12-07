@@ -30,10 +30,6 @@ public class MacOSCDRipper extends CDRipper {
         return CD_EJECT_CMD;
     }
 
-    @Override
-    protected String getRipCommand() {
-        return CD_RIP_CMD;
-    }
 
 
 }
