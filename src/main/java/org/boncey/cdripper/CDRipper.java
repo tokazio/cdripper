@@ -1,55 +1,41 @@
 package org.boncey.cdripper;
 
 import fr.tokazio.cddb.CddbData;
-import org.boncey.cdripper.model.CDInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Class for ripping Audio CDs. Copyright (c) 2000-2005 Darren Greaves.
- *
- * @author Darren Greaves
- * @version $Id: CDRipper.java,v 1.8 2008-11-14 11:48:58 boncey Exp $
- */
 public abstract class CDRipper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CDRipper.class);
 
-    /**
-     * The file extension for encoded files.
-     */
     private static final String EXT = ".wav";
 
-    private final File _baseDir;
+    private final File rippingDir;
+    private CDTrackRippedListener trackRippedlistener;
+    private CDDiscRippedListener discRippedListener;
 
-    private final List<String> _trackListing;
-    private CDRipperListener trackRippedlistener;
-    private Function endListener;
-
-    public CDRipper(File baseDir, List<String> trackListing) {
-        _baseDir = baseDir;
-        _trackListing = trackListing;
+    public CDRipper(final File rippingDir) {
+        LOGGER.debug("Ripping to folder " + rippingDir.getAbsolutePath() + "...");
+        if (!rippingDir.exists()) {
+            LOGGER.warn("The ripping dir " + rippingDir + " doesn't exists, creating it...");
+            rippingDir.mkdirs();
+        }
+        this.rippingDir = rippingDir;
     }
 
-    /**
-     * Rip the CD.
-     *
-     * @return
-     * @throws IOException          if unable to interact with the external processes.
-     * @throws InterruptedException if this thread is interrupted.
-     */
-    public CDRipper start(String tempDir, CddbData cddbData) throws RipException {
-        File tmpDir = new File(tempDir);
-        boolean exists = tmpDir.exists() && !tmpDir.delete();
-        if (!exists) {
+    public CDRipper start(final CddbData cddbData) throws RipException {
+        final File tmpDir = new File(rippingDir, "/tmp");
+        if (!tmpDir.exists()) {
             tmpDir.mkdirs();
+        } else {
+            tmpDir.delete();
+            //TODO delete failed...
+        }
             /* TODO by ui!
             File dir;
             if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
@@ -59,95 +45,46 @@ public abstract class CDRipper {
             }
              */
 
-            File dir = new File(_baseDir, cddbData.getArtist() + "-" + cddbData.getAlbum());
-            rip(cddbData, tmpDir);
-            dir.mkdirs();
-            tmpDir.renameTo(dir);
 
-            /*
-            CDInfo cdInfo;
-            try {
-                cdInfo = getCDInfo(tmpDir);
-                System.out.println(cdInfo);
-            } catch (IOException | InterruptedException ex) {
-                throw new CdInfoException(ex);
-            }
+        rip(cddbData, tmpDir);
+        final File toDir = new File(rippingDir, cddbData.getArtist() + "-" + cddbData.getAlbum());
+        toDir.mkdirs();
+        tmpDir.renameTo(toDir);
+        return this;
 
-            if (cdInfo != null) {
-                File dir;
-                if (!cdInfo.recognised() && !_trackListing.isEmpty()) {
-                    cdInfo.fromTrackListing(_trackListing);
-                } else if (!cdInfo.recognised()) {
-                    fail("Unable to recognise disk - provide a track listing file; aborting");
-                }
-
-                System.out.println(String.format("%s by %s", cdInfo.getAlbum(), cdInfo.getArtist()));
-                dir = new File(_baseDir, cdInfo.getDir());
-                try {
-                    rip(cdInfo, tmpDir);
-                    dir.mkdirs();
-                    tmpDir.renameTo(dir);
-                } catch (IOException | InterruptedException e) {
-                    throw new RipException(e);
-                }
-            }
-
-             */
-            return this;
-        }
-        throw new RipException(String.format("%s exists; clean up required", tmpDir));
+//        throw new RipException(String.format("%s exists; clean up required", tmpDir));
     }
 
+    private void rip(final CddbData discData, final File tmpDir) throws RipException {
 
-    /**
-     * Fail with an error message.
-     *
-     * @param message
-     * @throws IOException
-     */
-    private void fail(String message) {
-        System.err.println(message);
-    }
-
-
-    /**
-     * Rip the tracks from the CD.
-     *
-     * @param cdInfo  the CD info.
-     * @param baseDir the base directory to rip and encode within.
-     * @throws IOException          if unable to interact with the cdparanoia process.
-     * @throws InterruptedException if this thread is interrupted.
-     */
-    private void rip(CddbData cdInfo, File baseDir) throws RipException {
-        int index = 1;
-        cdInfo.getTracks().stream().map(t -> {
-            return t.getIndex() + "-" + t.getArtist() + "-" + t.getTitle() + EXT;
-        }).forEach(trackName -> {
+        discData.getTracks().forEach(trackData -> {
             try {
-                File wavFile = new File(baseDir, trackName);
-                File tempFile = File.createTempFile("wav", null, baseDir);
-                System.out.println(String.format("Ripping %s (to %s)", tempFile.getAbsolutePath(), wavFile.getAbsolutePath()));
+                final String trackName = trackData.getIndex() + "-" + trackData.getArtist() + "-" + trackData.getTitle() + EXT;
 
-                //osx "-e"
-                //linux "-e" et "-E"
+                File wavFile = new File(tmpDir, trackName);
+                File tempFile = File.createTempFile("wav", null, tmpDir);
+                LOGGER.debug("Ripping " + tempFile.getAbsolutePath() + " to tmp " + wavFile.getAbsolutePath() + "...");
 
-                ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-z", String.valueOf(index), tempFile.getAbsolutePath());
+                //TODO osx "-e"
+                //TODO linux "-e" et "-E"
+
+                final ProcessBuilder pb = new ProcessBuilder(getRipCommand(), "-v", "-z", String.valueOf(trackData.getIndex()), tempFile.getAbsolutePath());
                 pb.inheritIO();//ça c'est cool
                 Process proc = pb.start();
                 proc.waitFor();
                 if (proc.exitValue() != 0) {
-                    System.err.println("\nError ripping to " + tempFile.getAbsolutePath());
+                    LOGGER.error("\nError ripping to " + tempFile.getAbsolutePath());
                 } else {
                     if (!tempFile.renameTo(wavFile)) {
-                        System.err.println("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
+                        LOGGER.error("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
                     } else {
-                        System.out.println("Done ripping " + wavFile.getAbsolutePath());
+                        LOGGER.info("Done ripping " + wavFile.getAbsolutePath());
                         if (trackRippedlistener != null) {
-                            System.out.println("entering trackRippedlistener...");
-                            trackRippedlistener.done(wavFile);
-                            System.out.println("trackRippedlistener.done...");
+                            LOGGER.debug("entering trackRippedlistener...");
+                            trackRippedlistener.ripped(discData, trackData, wavFile);
+                            LOGGER.debug("trackRippedlistener.done...");
                         } else {
-                            System.out.println("No trackRippedlistener, go to next track...");
+                            LOGGER.debug("No trackRippedlistener, go to next track...");
                         }
                     }
                 }
@@ -155,18 +92,18 @@ public abstract class CDRipper {
                 LOGGER.error("Error ripping disc", ex);
             }
         });
-        if (endListener != null) {
-            endListener.apply(null);
+        if (discRippedListener != null) {
+            discRippedListener.ripped();
         }
     }
 
-    public CDRipper setTrackRippedListener(CDRipperListener listener) {
+    public CDRipper setTrackRippedListener(CDTrackRippedListener listener) {
         this.trackRippedlistener = listener;
         return this;
     }
 
-    public CDRipper setEndListener(Function listener) {
-        this.endListener = listener;
+    public CDRipper setDiscRippedListener(CDDiscRippedListener listener) {
+        this.discRippedListener = listener;
         return this;
     }
 
@@ -191,52 +128,12 @@ public abstract class CDRipper {
         return ret;
     }
 
-    protected abstract String getInfoCommand();
-
     public abstract String getEjectCommand();
 
     protected abstract String getRipCommand();
-
-    protected abstract CDInfo getCDInfo(File dir)
-            throws IOException, InterruptedException;
-
 
     public int progress() {
         //TODO handle stdout progress bar to get progress
         return 0;
     }
-    /**
-     * Rip and encode the CD.
-     *
-     * @param args the base dir.
-     */
-    /*
-    public static void main(String[] args) throws Exception {
-
-        if (args.length < 1) {
-            System.err.println("Usage: CDRipper <base dir> [track names text file]");
-            System.exit(-1);
-        }
-
-        File baseDir = new File(args[0]);
-        if (!baseDir.canRead() || !baseDir.isDirectory()) {
-            System.err.printf("Unable to access %s as a directory%n", baseDir);
-            System.exit(-1);
-        }
-
-        List<String> trackListing = Collections.EMPTY_LIST;
-        if (args.length > 1) {
-            trackListing = Files.readAllLines(Paths.get(args[1]));
-        }
-
-        try {
-            // TODO Select based on OS
-            CDRipper cdr = new MacOSRipper(baseDir, trackListing);
-            cdr.start();
-        } catch (CDRipperException e) {
-            e.printStackTrace();
-        }
-    }
-
-     */
 }

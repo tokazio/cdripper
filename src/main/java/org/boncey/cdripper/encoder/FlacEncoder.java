@@ -1,109 +1,37 @@
 package org.boncey.cdripper.encoder;
 
 
-import org.boncey.cdripper.Encoded;
-import org.boncey.cdripper.model.Track;
+import fr.tokazio.cddb.CddbData;
 
 import java.io.File;
-import java.io.IOException;
 
-/**
- * For encoding an audio file to FLAC. Copyright (c) 2000-2005 Darren Greaves.
- * 
- * @author Darren Greaves
- * @version $Id: FlacEncoder.java,v 1.6 2008-11-14 11:48:58 boncey Exp $
- */
-public class FlacEncoder extends AbstractEncoder
-{
+public class FlacEncoder extends AbstractEncoder {
 
-    /**
-     * The encode command.
-     */
     private static final String FLAC_CMD = "flac";
 
-
-    /**
-     * The file extension for encoded files.
-     */
     private static final String EXT = ".flac";
 
-
-    /**
-     * Public constructor.
-     *
-     * @param encoded    the class to notify once encoding is finished.
-     * @param toLocation the location to save the files to.
-     */
-    public FlacEncoder(Encoded encoded, File toLocation) {
-
-        super(encoded, toLocation);
+    public FlacEncoder(final CddbData discData, final CddbData.Track trackData, final File fromFile, final File toDir) {
+        super(discData, trackData, fromFile, toDir);
     }
 
     @Override
-    protected String getTempFileSuffix()
-    {
-        return ".flac";
-    }
-
-    /**
-     * Get the file extension for encoded files.
-     * 
-     * @return the file extension.
-     */
-    @Override
-    protected String getExt()
-    {
-
+    protected String getExt() {
         return EXT;
     }
 
-
-    /**
-     * Get the command to encode.
-     * 
-     * @param track the track to encode.
-     * @param encodedFilename the filename to encode to.
-     * @param wavFile the file to encode from.
-     * @return the command to encode.
-     */
     @Override
-    protected String[] getEncodeCommand(Track track, String encodedFilename, String wavFile)
-    {
-
+    protected String[] getEncodeCommand(final CddbData album, final CddbData.Track track, final File fromFile, final File toFile) {
         String[] args =
-        {
-                FLAC_CMD, "--silent", "--force", "--verify", "--tag", "title=" + track.getTrackName(), "--tag", "album=" + track.getAlbum(), "--tag",
-                "artist=" + track.getArtist(), "--tag", "tracknumber=" + track.getTrackNum(), "-o", encodedFilename, wavFile
-        };
-
+                {
+                        FLAC_CMD, "--silent", "--force", "--verify", "--tag", "title=" + track.getTitle(), "--tag", "album=" + album.getAlbum(), "--tag",
+                        "artist=" + track.getArtist(), "--tag", "tracknumber=" + track.getIndex(), "-o", toFile.getAbsolutePath(), fromFile.getAbsolutePath()
+                };
         return args;
     }
 
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @throws InterruptedException
-     * @throws IOException
-     */
     @Override
-    public boolean dependenciesInstalled() throws IOException, InterruptedException
-    {
-
-        return exec(new String[]
-        {
-                FLAC_CMD, "-v"
-        });
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String command()
-    {
-
+    public String command() {
         return FLAC_CMD;
     }
 

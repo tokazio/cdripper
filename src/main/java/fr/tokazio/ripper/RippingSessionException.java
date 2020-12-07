@@ -1,6 +1,6 @@
 package fr.tokazio.ripper;
 
-public class RippingSessionException extends Throwable {
+public class RippingSessionException extends Exception {
 
     public RippingSessionException(String message) {
         super(message);

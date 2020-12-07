@@ -12,7 +12,6 @@ import fr.tokazio.cddb.discid.DiscIdException;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
-import org.boncey.cdripper.model.Track;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +19,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 @ApplicationScoped
 public class RippingSession implements Serializable {
@@ -35,8 +32,6 @@ public class RippingSession implements Serializable {
     private static final ExecutorService executor = Executors.newFixedThreadPool(2);
     @JsonProperty
     private final String uuid = UUID.randomUUID().toString();
-    @JsonIgnore
-    private final Encoded monitor = new FileDeletingTrackMonitor();
     //@Inject
     //EventBus bus;
     @Inject
@@ -118,32 +113,26 @@ public class RippingSession implements Serializable {
 
     private void rip() throws RipException {
         this.state = State.RIPPING_STARTED;
-        final File baseDir = new File("/audio");
+        final File rippingDir = new File("/audio");
 
-        if (!baseDir.exists()) {
-            baseDir.mkdirs();
+        if (!rippingDir.exists()) {
+            rippingDir.mkdirs();
         }
 
-        ripper = provideRipper(baseDir)
-                .setTrackRippedListener(file -> {
+        ripper = provideRipper(rippingDir)
+                .setTrackRippedListener((discData, trackData, file) -> {
                     //bus.publish("ripping-track-end", file);
-                    File dest = new File("encoded");
-                    LOGGER.debug("Flac encoder to " + dest.getAbsolutePath());
-                    final Encoder encoder = new FlacEncoder(monitor, dest);
-                    LOGGER.debug("Preparing encoding for " + file.getAbsolutePath() + " (baseDir: " + baseDir.getAbsolutePath() + ")");
-                    final Track track = Track.createTrack(file, baseDir, "flac");
-                    encoder.queue(track, false);
-                    LOGGER.debug("Will encode " + file.getName() + " to FLAC...");
+                    LOGGER.debug("Flac encoder for " + file.getAbsolutePath() + " to " + rippingDir.getAbsolutePath());
+                    final Encoder encoder = new FlacEncoder(discData, trackData, file, rippingDir);
                     executor.execute(encoder);
                 })
-                .setEndListener(new Function() {
+                .setDiscRippedListener(new CDDiscRippedListener() {
                     @Override
-                    public Object apply(Object o) {
+                    public void ripped() {
                         //bus.publish("ripping-disc-end", this);
-                        return null;
                     }
                 })
-                .start(this.uuid, this.cddbData);
+                .start(this.cddbData);
         //bus.publish("ripping-disc-start", this);
     }
 
@@ -158,12 +147,12 @@ public class RippingSession implements Serializable {
         }
     }
 
-    private CDRipper provideRipper(final File baseDir) {
+    private CDRipper provideRipper(final File rippingDir) {
         if (OS.isUnix()) {
-            return new LinuxCDRipper(baseDir, Collections.emptyList());
+            return new LinuxCDRipper(rippingDir);
         }
         if (OS.isMac()) {
-            return new MacOSCDRipper(baseDir, Collections.emptyList());
+            return new MacOSCDRipper(rippingDir);
         }
         throw new UnsupportedOperationException("OS not supported");
     }

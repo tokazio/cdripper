@@ -2,11 +2,15 @@ package fr.tokazio;
 
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.discid.DiscIdException;
+import fr.tokazio.events.RippingError;
 import fr.tokazio.ripper.RipperService;
 import fr.tokazio.ripper.RippingSessionException;
 import org.boncey.cdripper.RipException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -21,6 +25,11 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class FolderResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FolderResource.class);
+
+    @Inject
+    Event<RippingError> rippingErrorEvent;
 
     @Inject
     FolderService folderService;
@@ -41,17 +50,15 @@ public class FolderResource {
 
     @Path("/rip")
     @GET
-    public void rip() throws DiscIdException, RippingSessionException, CDDBException, RipException {
-        new Thread() {
-
-            public void run() {
-                try {
-                    ripperService.rip(null);
-                } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
-                    e.printStackTrace();
-                }
+    public void rip() {
+        new Thread(() -> {
+            try {
+                ripperService.rip(null);
+            } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
+                LOGGER.error("Error ripping disc", e);
+                rippingErrorEvent.fireAsync(new RippingError(e));
             }
-        }.start();
+        }).start();
 
     }
 }

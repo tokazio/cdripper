@@ -1,109 +1,46 @@
 package org.boncey.cdripper.encoder;
 
 
-import org.boncey.cdripper.Encoded;
-import org.boncey.cdripper.model.Track;
+import fr.tokazio.cddb.CddbData;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * For encoding an audio file to MP3.
- * 
+ * <p>
  * Copyright (c) 2000-2005 Darren Greaves.
- * 
+ *
  * @author Darren Greaves
  * @version $Id: Mp3Encoder.java,v 1.2 2008-11-14 11:48:58 boncey Exp $
  */
-public class Mp3Encoder extends AbstractEncoder
-{
+public class Mp3Encoder extends AbstractEncoder {
 
-    /**
-     * The encode command.
-     */
     private static final String MP3_CMD = "lame";
 
-
-    /**
-     * The file extension for encoded files.
-     */
     private static final String EXT = ".mp3";
 
-
-    /**
-     * Public constructor.
-     * 
-     * @param encoded the class to notify once encoding is finished.
-     * @param location the location to save the files to.
-     */
-    public Mp3Encoder(Encoded encoded, File location)
-    {
-
-        super(encoded, location);
+    public Mp3Encoder(final CddbData discData, final CddbData.Track trackData, final File fromFile, final File toDir) {
+        super(discData, trackData, fromFile, toDir);
     }
 
     @Override
-    protected String getTempFileSuffix()
-    {
-        return ".mp3";
-    }
-
-    /**
-     * Get the file extension for encoded files.
-     * 
-     * @return the file extension.
-     */
-    @Override
-    protected String getExt()
-    {
-
+    protected String getExt() {
         return EXT;
     }
 
-
-    /**
-     * Get the command to encode.
-     * 
-     * @param track the track to encode.
-     * @param encodedFilename the filename to encode to.
-     * @param wavFile the file to encode from.
-     * @return the command to encode.
-     */
     @Override
-    protected String[] getEncodeCommand(Track track, String encodedFilename, String wavFile)
-    {
-
+    protected String[] getEncodeCommand(final CddbData album, final CddbData.Track track, final File fromFile, final File toFile) {
         String[] args =
-        {
-                MP3_CMD, "--quiet", "--vbr-new", "-h", "-b", "192", "--add-id3v2", "--tt", track.getTrackName(), "--tl", track.getAlbum(), "--ta",
-                track.getArtist(), "--tn", track.getTrackNum(), wavFile, encodedFilename
-        };
-
+                {
+                        MP3_CMD, "--quiet", "--vbr-new", "-h", "-b", "192", "--add-id3v2", "--tt", track.getTitle(), "--tl", album.getAlbum(), "--ta",
+                        track.getArtist(), "--tn", track.getIndex(), fromFile.getAbsolutePath(), toFile.getAbsolutePath()
+                };
         return args;
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public boolean dependenciesInstalled() throws IOException, InterruptedException
-    {
-
-        return exec(new String[]
-        {
-                MP3_CMD, "--help"
-        });
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String command()
-    {
-
+    public String command() {
         return MP3_CMD;
     }
 }
