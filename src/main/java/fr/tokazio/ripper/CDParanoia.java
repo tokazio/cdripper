@@ -82,6 +82,22 @@ public class CDParanoia {
                 }
             }
         }.start();
+        new Thread() {
+            public void run() {
+                final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+                while (proc.isAlive()) {
+                    String line = "";
+                    try {
+                        while ((line = reader.readLine()) != null) {
+                            sb.append(line);
+                            LOGGER.debug(line);
+                        }
+                    } catch (IOException ex) {
+                        LOGGER.warn("Error reading ripping process output", ex);
+                    }
+                }
+            }
+        }.start();
         proc.waitFor();
         if (proc.exitValue() != 0) {
             throw new ProcException(proc.exitValue(), sb.toString());
