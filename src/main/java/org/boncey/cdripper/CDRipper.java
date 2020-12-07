@@ -1,14 +1,12 @@
 package org.boncey.cdripper;
 
 import fr.tokazio.cddb.CddbData;
+import fr.tokazio.ripper.CDParanoia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class CDRipper {
 
@@ -62,7 +60,7 @@ public abstract class CDRipper {
         return this;
     }
 
-    private void rip(final CddbData discData, final File tmpDir) throws RipException {
+    private void rip(final CddbData discData, final File tmpDir) {
         LOGGER.debug("Ripping " + discData.getTracks().size() + " track to " + tmpDir.getAbsolutePath() + "...");
         discData.getTracks().forEach(trackData -> {
             try {
@@ -72,37 +70,25 @@ public abstract class CDRipper {
                 File tempFile = File.createTempFile("wav", null, tmpDir);
                 LOGGER.debug("Ripping " + tempFile.getAbsolutePath() + " to tmp " + wavFile.getAbsolutePath() + "...");
 
-                //TODO osx "-e"
-                //TODO linux "-e" et "-E"
+                new CDParanoia()
+                        .verbose()
+                        .neverSkip(0)
+                        .forceOutputProgressToErr()
+                        .rip(Integer.parseInt(trackData.getIndex()) + 1, tempFile);
 
-                final String[] cmd = {
-                        getRipCommand(),
-                        "-v",
-                        "-z",
-                        String.valueOf(Integer.parseInt(trackData.getIndex()) + 1),
-                        tempFile.getAbsolutePath()
-                };
-                LOGGER.info("Ripping command: " + Arrays.toString(cmd));
-                final ProcessBuilder pb = new ProcessBuilder(cmd);
-                pb.inheritIO();//ça c'est cool
-                Process proc = pb.start();
-                proc.waitFor();
-                if (proc.exitValue() != 0) {
-                    LOGGER.error("\nError ripping to " + tempFile.getAbsolutePath());
+                if (!tempFile.renameTo(wavFile)) {
+                    LOGGER.error("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
                 } else {
-                    if (!tempFile.renameTo(wavFile)) {
-                        LOGGER.error("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
+                    LOGGER.info("Done ripping " + wavFile.getAbsolutePath());
+                    if (trackRippedlistener != null) {
+                        LOGGER.debug("entering trackRippedlistener...");
+                        trackRippedlistener.ripped(discData, trackData, wavFile);
+                        LOGGER.debug("trackRippedlistener.done...");
                     } else {
-                        LOGGER.info("Done ripping " + wavFile.getAbsolutePath());
-                        if (trackRippedlistener != null) {
-                            LOGGER.debug("entering trackRippedlistener...");
-                            trackRippedlistener.ripped(discData, trackData, wavFile);
-                            LOGGER.debug("trackRippedlistener.done...");
-                        } else {
-                            LOGGER.debug("No trackRippedlistener, go to next track...");
-                        }
+                        LOGGER.debug("No trackRippedlistener, go to next track...");
                     }
                 }
+
             } catch (IOException | InterruptedException ex) {
                 LOGGER.error("Error ripping disc to " + tmpDir.getAbsolutePath(), ex);
             }
@@ -122,30 +108,8 @@ public abstract class CDRipper {
         return this;
     }
 
-    /**
-     * Strip characters that can't be used in a filename.
-     *
-     * @param filename the filename to tidy.
-     * @return the tidied filename.
-     */
-    protected String tidyFilename(String filename) {
-
-        String ret;
-
-        Pattern bad = Pattern.compile("[\\:*?\"`<>|]");
-        Matcher badMatcher = bad.matcher(filename);
-        ret = badMatcher.replaceAll("");
-
-        Pattern slash = Pattern.compile("/");
-        Matcher slashMatcher = slash.matcher(ret);
-        ret = slashMatcher.replaceAll("-");
-
-        return ret;
-    }
 
     public abstract String getEjectCommand();
-
-    protected abstract String getRipCommand();
 
     public int progress() {
         //TODO handle stdout progress bar to get progress

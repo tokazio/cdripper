@@ -132,7 +132,7 @@ public class RippingSession implements Serializable {
                 .setTrackRippedListener((discData, trackData, file) -> {
                     //bus.publish("ripping-track-end", file);
                     LOGGER.debug("Flac encoder for " + file.getAbsolutePath() + " to " + rippingDir.getAbsolutePath());
-                    final Encoder encoder = new FlacEncoder(discData, trackData, file, rippingDir);
+                    final Encoder encoder = new FlacEncoder(discData, trackData, file, RipperUtils.tidyFilename(new File(rippingDir, discData.getArtist() + "-" + discData.getAlbum())));
                     executor.execute(encoder);
                 })
                 .setDiscRippedListener(new CDDiscRippedListener() {

@@ -12,11 +12,6 @@ import java.io.File;
 public class LinuxCDRipper extends CDRipper {
 
     /**
-     * The command for getting CD info.
-     */
-    private static final String CD_RIP_CMD = "cdparanoia";
-
-    /**
      * The command for ejecting a CD when done.
      */
     private static final String CD_EJECT_CMD = "eject";
@@ -30,9 +25,5 @@ public class LinuxCDRipper extends CDRipper {
         return CD_EJECT_CMD;
     }
 
-    @Override
-    protected String getRipCommand() {
-        return CD_RIP_CMD;
-    }
 
 }
