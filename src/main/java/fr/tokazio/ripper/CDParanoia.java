@@ -64,9 +64,9 @@ public class CDParanoia {
         final String[] cmd = args.toArray(new String[0]);
         LOGGER.info("Ripping command: " + Arrays.toString(cmd));
         final ProcessBuilder pb = new ProcessBuilder(cmd);
-        //pb.inheritIO();//ça c'est cool
+        pb.inheritIO();//ça c'est cool
         final Process proc = pb.start();
-        new Thread() {
+        Thread t1 = new Thread() {
             public void run() {
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
                 while (proc.isAlive()) {
@@ -81,8 +81,11 @@ public class CDParanoia {
                     }
                 }
             }
-        }.start();
-        new Thread() {
+        };
+        t1.setDaemon(true);
+        t1.setName("CDParanoia-inputStream-reader");
+        t1.start();
+        Thread t2 = new Thread() {
             public void run() {
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
                 while (proc.isAlive()) {
@@ -97,11 +100,18 @@ public class CDParanoia {
                     }
                 }
             }
-        }.start();
+        };
+        t2.setDaemon(true);
+        t2.setName("CDParanoia-errorStream-reader");
+        t2.start();
         proc.waitFor();
+        t1.interrupt();
+        t2.interrupt();
         if (proc.exitValue() != 0) {
             throw new ProcException(proc.exitValue(), sb.toString());
         }
+        LOGGER.info("Ripping track ended");
+
         return sb.toString();
     }
 
