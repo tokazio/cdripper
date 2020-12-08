@@ -47,6 +47,6 @@ public class RipperService {
     }
 
     public boolean isRipping() {
-        return rippingSessionFactory.currentSession() != null;
+        return rippingSessionFactory.currentSession() != null && rippingSessionFactory.currentSession().isActive();
     }
 }

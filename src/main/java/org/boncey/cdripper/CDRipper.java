@@ -88,7 +88,7 @@ public abstract class CDRipper {
                         .logDebug()
                         .onProgress(position -> {
                             status.setTrackProgress((int) ((position / maxReadPos) * 100));
-                            LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "%");
+                            //LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "%");
                         })
                         .rip(status.getTrackId(), tempFile);
 

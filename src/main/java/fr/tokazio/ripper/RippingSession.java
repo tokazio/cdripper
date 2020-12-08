@@ -162,7 +162,14 @@ public class RippingSession implements Serializable {
     }
 
     public RippingStatus status() {
-        return ripper.status().setServiceState(state.name());
+        if (ripper != null) {
+            return ripper.status().setServiceState(state.name());
+        }
+        return new RippingStatus().setServiceState(state.name());
+    }
+
+    public boolean isActive() {
+        return !State.TERMINATED.equals(state);
     }
 
     public enum State {

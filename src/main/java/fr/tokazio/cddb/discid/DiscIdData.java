@@ -64,6 +64,8 @@ public class DiscIdData implements Serializable {
     }
 
     public int getFrameLenOf(int trackId) {
-        return frameOffsets[trackId] - frameOffsets[trackId - 1];
+        int len = frameOffsets[trackId] - frameOffsets[trackId - 1];
+        LOGGER.debug("Track #" + trackId + " from " + frameOffsets[trackId - 1] + " to " + frameOffsets[trackId] + "(len " + len + ")");
+        return len;
     }
 }
