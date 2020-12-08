@@ -83,12 +83,13 @@ public abstract class CDRipper {
 
                 new CDParanoia()
                         .verbose()
-                        .neverSkip(0)
+                        .neverSkip(25)
                         .forceOutputProgressToErr()
                         .logDebug()
-                        .onProgress(position -> {
+                        .onProgress((position, nbCorr, nbOverlap, nbJitter) -> {
                             status.setTrackProgress((int) ((position / maxReadPos) * 100));
-                            //LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "%");
+                            LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "% (" + position + ")");
+                            LOGGER.debug("\tQuality info: overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x jitter: " + nbJitter + "x");
                         })
                         .rip(status.getTrackId(), tempFile);
 

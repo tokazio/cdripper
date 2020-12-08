@@ -99,7 +99,7 @@ public class CDParanoia {
                                     maxAt = at;
                                 }
                                 if (progressListener != null) {
-                                    progressListener.onProgress(maxAt);
+                                    progressListener.onProgress(maxAt, nbCorr, nbOverlap, nbJitter);
                                 }
                             }
 
@@ -206,7 +206,7 @@ track_num = 24 start sector 312430 msf: 69,27,55
 
     public interface ProgressListener {
 
-        void onProgress(int position);
+        void onProgress(int position, int nbCorr, int nbOverlap, int nbJitter);
 
     }
 
