@@ -25,20 +25,12 @@ public class RippingResource {
     RipperService ripperService;
 
 
+    //TODO idempotent (ne devrait pas faire status)
     @Path("/rip")
     @GET
-    public void rip() throws DiscIdException, RippingSessionException, CDDBException, RipException {
-        new Thread() {
-
-            public void run() {
-                try {
-                    ripperService.rip(null);
-                } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-
+    public RippingStatus rip() throws DiscIdException, RippingSessionException, CDDBException, RipException {
+        ripperService.resume(null);
+        return ripperService.status();
     }
 
     @GET

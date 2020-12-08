@@ -72,7 +72,8 @@ public class DBusListener {
                     if ("dev-sr0.device".equals(s.getUnitName())) {
                         LOGGER.info("A disc was inserted, ripping it...");
                         try {
-                            ripperService.rip(null);
+                            ripperService.resume(null);
+                            //TODO bean event
                         } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
                             LOGGER.error("Error ripping/encoding", e);
                         }

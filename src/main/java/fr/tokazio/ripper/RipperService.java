@@ -35,18 +35,18 @@ public class RipperService {
     }
 
     //    @ConsumeEvent(value = CDinsertedEvent.EVENT_NAME, blocking = true)
-    public void rip(@ObservesAsync CDinsertedEvent event) throws RipException, CDDBException, DiscIdException, RippingSessionException {
+    public void resume(@ObservesAsync CDinsertedEvent event) throws RipException, CDDBException, DiscIdException, RippingSessionException {
         rippingSessionFactory.resume();
     }
 
     public RippingStatus status() {
-        if (rippingSessionFactory.currentSession() != null) {
-            return rippingSessionFactory.currentSession().status();
+        if (rippingSessionFactory.hasActiveSession()) {
+            return rippingSessionFactory.status();
         }
-        return new RippingStatus().setServiceState("NO_SESSION");
+        return new RippingStatus().setServiceState("NO_ACTIVE_SESSION");
     }
 
     public boolean isRipping() {
-        return rippingSessionFactory.currentSession() != null && rippingSessionFactory.currentSession().isActive();
+        return rippingSessionFactory.hasActiveSession();
     }
 }

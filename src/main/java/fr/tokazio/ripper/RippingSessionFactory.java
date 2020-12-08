@@ -1,5 +1,6 @@
 package fr.tokazio.ripper;
 
+import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
@@ -21,22 +22,24 @@ public class RippingSessionFactory {
 
     private final Map<String, RippingSession> sessions = new HashMap<>();
 
-    private RippingSession currentSession;
+    private RippingSessionThread currentSessionThread;
 
     @Inject
     Instance<RippingSession> provider;
 
     public RippingSession resume() throws CDDBException, RippingSessionException, DiscIdException, RipException {
-        this.currentSession = doResume();
-        return this.currentSession;
+        if (currentSessionThread != null) {
+            LOGGER.debug("A session is already running: " + currentSessionThread.currentSession().uuid());
+            currentSessionThread.resume();
+        } else {
+            currentSessionThread = new RippingSessionThread(doResume());
+            currentSessionThread.start();
+        }
+        return currentSessionThread.currentSession();
     }
 
     private RippingSession doResume() throws CDDBException, RippingSessionException, DiscIdException, RipException {
-        if (currentSession != null) {
-            LOGGER.debug("Resuming session " + currentSession.uuid());
-            currentSession.run();
-            return currentSession;
-        }
+        LOGGER.debug("No active session");
         //no session started
         if (sessions.isEmpty()) {
             RippingSession session = provideNew();
@@ -79,7 +82,11 @@ public class RippingSessionFactory {
         return new DiscId().getDiscId();
     }
 
-    public RippingSession currentSession() {
-        return currentSession;
+    public boolean hasActiveSession() {
+        return currentSessionThread != null && currentSessionThread.isAlive();
+    }
+
+    public RippingStatus status() {
+        return hasActiveSession() ? currentSessionThread.status() : new RippingStatus().setServiceState("NO_ACTIVE_SESSION");
     }
 }
