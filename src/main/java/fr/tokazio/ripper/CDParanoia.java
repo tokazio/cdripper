@@ -60,11 +60,38 @@ public class CDParanoia {
         return 0;
     }
 
+    //1 6 970 152
+
+    /*
+
+    36 456 / 235.2 = 155
+    to
+    1 410 024 / 235.2 = 599...
+
+    35 280 / 235.2 = 150
+    to
+    7 006 608 / 235.2 = 29 790
+
+    2-----
+    5644800 = 24 000
+    to
+    7027776
+
+    5643624 = 23 995
+
+
+
+    1: 4927-150 in frames: 4777 frames - 1 frame is 2352 bytes
+       -> 4777*2352 = 11235504 bytes
+    2: 22735-4927 : 17808 frames
+    */
+
     private String run() throws IOException, InterruptedException, ProcException {
         final String[] cmd = args.toArray(new String[0]);
         LOGGER.info("Ripping command: " + Arrays.toString(cmd));
         final ProcessBuilder pb = new ProcessBuilder(cmd);
         //pb.inheritIO();//ça c'est cool
+        final long start = System.currentTimeMillis();
         final Process proc = pb.start();
         Thread t1 = new Thread() {
             public void run() {
@@ -87,31 +114,55 @@ public class CDParanoia {
         t1.start();
         Thread t2 = new Thread() {
             public void run() {
+                int at = 0;
+                int first = 0;
+                int nbCorr = 0;
+                int nbOverlap = 0;
+                int nbJitter = 0;
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
                 while (proc.isAlive()) {
                     String line = "";
                     try {
                         while ((line = reader.readLine()) != null) {
                             sb.append(line);
-                            LOGGER.debug(line);
+                            if (line.contains("[read]")) {
+                                at = Integer.parseInt(line.substring(line.lastIndexOf(' ') + 1));
+                                if (first == 0) {
+                                    first = at;
+                                }
+                                LOGGER.debug((at - first) + " (" + line + ")");
+                            }
+
+                            if (line.contains("[correction]")) {
+                                nbCorr++;
+                            }
+
+                            if (line.contains("[overlap]")) {
+                                nbOverlap++;
+                            }
+
+                            if (line.contains("[jitter]")) {
+                                nbJitter++;
+                            }
                         }
                     } catch (IOException ex) {
                         LOGGER.warn("Error reading ripping process output", ex);
                     }
                 }
+                LOGGER.info((at - first) + " overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x");
             }
         };
         t2.setDaemon(true);
         t2.setName("CDParanoia-errorStream-reader");
         t2.start();
         proc.waitFor();
+        final long end = System.currentTimeMillis();
         t1.interrupt();
         t2.interrupt();
         if (proc.exitValue() != 0) {
             throw new ProcException(proc.exitValue(), sb.toString());
         }
-        LOGGER.info("Ripping track ended");
-
+        LOGGER.info("Ripping track ended in " + (end - start) + "ms");
         return sb.toString();
     }
 

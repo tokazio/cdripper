@@ -23,10 +23,13 @@ public class DiscIdData implements Serializable {
     @JsonProperty
     private final int totalLengthInSec;
 
-    //It outputs the discid, the number
-    //       of  tracks,  the  frame  offset  of  all  of the tracks, and the total length of the CD in
-    //       seconds, on one line in a space-delimited format.
-    //cc10ae0f 15 182 13005 28870 46377 62425 87930 112267 128607 143960 159022 190262 233922 248090 275132 303485 4272
+    //It outputs the:
+    // * discid,
+    // * the number of  tracks,
+    // * the  frame  offset  of  all  of the tracks,
+    // * and the total length of the CD in seconds,
+    // on one line in a space-delimited format.
+    //example: cc10ae0f 15 182 13005 28870 46377 62425 87930 112267 128607 143960 159022 190262 233922 248090 275132 303485 4272
 
     public DiscIdData(final String str) {
         LOGGER.debug("Creating DiscIdData with: " + str + "...");

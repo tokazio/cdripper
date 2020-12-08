@@ -74,6 +74,7 @@ public abstract class CDRipper {
                         .verbose()
                         .neverSkip(0)
                         .forceOutputProgressToErr()
+                        .logDebug()
                         .rip(Integer.parseInt(trackData.getIndex()) + 1, tempFile);
 
                 if (!tempFile.renameTo(wavFile)) {
