@@ -43,7 +43,7 @@ public class RipperService {
         if (rippingSessionFactory.currentSession() != null) {
             return rippingSessionFactory.currentSession().status();
         }
-        throw new NoRippingSession();
+        return new RippingStatus().setServiceState("NO_SESSION");
     }
 
     public boolean isRipping() {

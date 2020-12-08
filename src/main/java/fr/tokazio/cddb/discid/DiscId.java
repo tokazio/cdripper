@@ -35,6 +35,7 @@ public class DiscId {
         //pb.inheritIO();
         String result = "";
         try {
+            LOGGER.debug("Discid command: " + cmd);
             final Process proc = pb.start();
             final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             final StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
@@ -42,7 +43,7 @@ public class DiscId {
             result = sj.toString();
             proc.waitFor();
             if (proc.exitValue() != 0) {
-                LOGGER.error(cmd + ": " + proc.exitValue() + "=" + result);
+                LOGGER.error("Discid error: code=" + proc.exitValue() + " result=" + result);
                 if (proc.exitValue() == 1) {
                     throw new DiscIdException(cmd + ": Operation not permitted");
                 }
@@ -51,6 +52,7 @@ public class DiscId {
                 }
                 throw new DiscIdException(result);
             }
+            LOGGER.debug("Discid result: " + result);
             return new DiscIdData(result);
         } catch (IOException | InterruptedException ex) {
             LOGGER.error(cmd + ": " + result, ex);
