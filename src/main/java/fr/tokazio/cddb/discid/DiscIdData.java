@@ -62,4 +62,8 @@ public class DiscIdData implements Serializable {
     public int getTotalLengthInSec() {
         return totalLengthInSec;
     }
+
+    public int getFrameLenOf(int trackId) {
+        return frameOffsets[trackId] - frameOffsets[trackId - 1];
+    }
 }

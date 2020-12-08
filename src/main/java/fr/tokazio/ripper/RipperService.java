@@ -1,5 +1,6 @@
 package fr.tokazio.ripper;
 
+import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
@@ -33,15 +34,19 @@ public class RipperService {
         return new Cddb().getCddb(discIdData);
     }
 
-
     //    @ConsumeEvent(value = CDinsertedEvent.EVENT_NAME, blocking = true)
     public void rip(@ObservesAsync CDinsertedEvent event) throws RipException, CDDBException, DiscIdException, RippingSessionException {
-
-
         rippingSessionFactory.resume();
     }
 
-    public String status() {
-        return rippingSessionFactory.currentSession().state().name();
+    public RippingStatus status() {
+        if (rippingSessionFactory.currentSession() != null) {
+            return rippingSessionFactory.currentSession().status();
+        }
+        throw new NoRippingSession();
+    }
+
+    public boolean isRipping() {
+        return rippingSessionFactory.currentSession() != null;
     }
 }

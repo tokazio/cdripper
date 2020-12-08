@@ -68,6 +68,6 @@ public class RippingSessionFactory {
     }
 
     public RippingSession currentSession() {
-        return null;
+        return currentSession;
     }
 }

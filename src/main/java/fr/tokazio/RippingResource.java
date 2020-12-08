@@ -2,6 +2,7 @@ package fr.tokazio;
 
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.discid.DiscIdException;
+import fr.tokazio.ripper.NoRippingSession;
 import fr.tokazio.ripper.RipperService;
 import fr.tokazio.ripper.RippingSessionException;
 import org.boncey.cdripper.RipException;
@@ -41,7 +42,7 @@ public class RippingResource {
     }
 
     @GET
-    public String status() {
+    public RippingStatus status() throws NoRippingSession {
         return ripperService.status();
     }
 }

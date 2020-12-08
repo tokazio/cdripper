@@ -1,6 +1,8 @@
 package org.boncey.cdripper;
 
+import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CddbData;
+import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.ripper.CDParanoia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,8 @@ public abstract class CDRipper {
     private CDTrackRippedListener trackRippedlistener;
     private CDDiscRippedListener discRippedListener;
 
+    private final RippingStatus status = new RippingStatus();
+
     public CDRipper(final File rippingDir) {
         LOGGER.debug("Ripping to folder " + rippingDir.getAbsolutePath() + "...");
         if (!rippingDir.exists()) {
@@ -29,7 +33,7 @@ public abstract class CDRipper {
         this.rippingDir = rippingDir;
     }
 
-    public CDRipper start(final CddbData cddbData) throws RipException {
+    public CDRipper start(final DiscIdData discIdData, final CddbData cddbData) throws RipException {
         final File tmpDir = new File(rippingDir, "/tmp");
         LOGGER.debug("Start ripping to temp dir: " + tmpDir.getAbsolutePath());
         if (!tmpDir.exists()) {
@@ -53,16 +57,17 @@ public abstract class CDRipper {
              */
 
 
-        rip(cddbData, tmpDir);
+        rip(discIdData, cddbData, tmpDir);
         final File toDir = new File(rippingDir, cddbData.getArtist() + "-" + cddbData.getAlbum());
         toDir.mkdirs();
         tmpDir.renameTo(toDir);
         return this;
     }
 
-    private void rip(final CddbData discData, final File tmpDir) {
+    private void rip(final DiscIdData discIdData, final CddbData discData, final File tmpDir) {
         LOGGER.debug("Ripping " + discData.getTracks().size() + " track to " + tmpDir.getAbsolutePath() + "...");
         discData.getTracks().forEach(trackData -> {
+            status.setTrackId(-1);
             try {
                 final String trackName = trackData.getIndex() + "-" + trackData.getArtist() + "-" + trackData.getTitle() + EXT;
 
@@ -70,12 +75,22 @@ public abstract class CDRipper {
                 File tempFile = File.createTempFile("wav", null, tmpDir);
                 LOGGER.debug("Ripping " + tempFile.getAbsolutePath() + " to tmp " + wavFile.getAbsolutePath() + "...");
 
+                status.setTrackId(Integer.parseInt(trackData.getIndex()) + 1);
+
+                final float maxReadPos = discIdData.getFrameLenOf(status.getTrackId()) * 1500;
+
+                LOGGER.debug("Reading track #" + status.getTrackId() + " to pos " + maxReadPos);
+
                 new CDParanoia()
                         .verbose()
                         .neverSkip(0)
                         .forceOutputProgressToErr()
                         .logDebug()
-                        .rip(Integer.parseInt(trackData.getIndex()) + 1, tempFile);
+                        .onProgress(position -> {
+                            status.setTrackProgress((int) ((position / maxReadPos) * 100));
+                            LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "%");
+                        })
+                        .rip(status.getTrackId(), tempFile);
 
                 if (!tempFile.renameTo(wavFile)) {
                     LOGGER.error("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
@@ -109,11 +124,9 @@ public abstract class CDRipper {
         return this;
     }
 
-
     public abstract String getEjectCommand();
 
-    public int progress() {
-        //TODO handle stdout progress bar to get progress
-        return 0;
+    public RippingStatus status() {
+        return status;
     }
 }

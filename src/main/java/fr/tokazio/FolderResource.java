@@ -50,15 +50,17 @@ public class FolderResource {
 
     @Path("/rip")
     @GET
-    public void rip() {
-        new Thread(() -> {
-            try {
-                ripperService.rip(null);
-            } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
-                LOGGER.error("Error ripping disc", e);
-                rippingErrorEvent.fireAsync(new RippingError(e));
-            }
-        }).start();
-
+    public RippingStatus rip() {
+        if (!ripperService.isRipping()) {
+            new Thread(() -> {
+                try {
+                    ripperService.rip(null);
+                } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
+                    LOGGER.error("Error ripping disc", e);
+                    rippingErrorEvent.fireAsync(new RippingError(e));
+                }
+            }).start();
+        }
+        return ripperService.status();
     }
 }

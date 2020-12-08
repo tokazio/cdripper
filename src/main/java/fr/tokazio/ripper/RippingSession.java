@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.tokazio.DiscogsService;
 import fr.tokazio.OS;
+import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
@@ -56,13 +57,6 @@ public class RippingSession implements Serializable {
 
     public State state() {
         return state;
-    }
-
-    public int progress() {
-        if (state.equals(State.RIPPING_STARTED)) {
-            return ripper.progress();
-        }
-        return -1;
     }
 
     public void run() throws DiscIdException, CDDBException, RipException, RippingSessionException {
@@ -142,7 +136,7 @@ public class RippingSession implements Serializable {
                     }
                 });
         LOGGER.info("Ripping with " + ripper.getClass().getName());
-        ripper.start(this.cddbData);
+        ripper.start(this.discIdData, this.cddbData);
         //bus.publish("ripping-disc-start", this);
     }
 
@@ -167,7 +161,11 @@ public class RippingSession implements Serializable {
         throw new UnsupportedOperationException("OS not supported");
     }
 
-    enum State {
+    public RippingStatus status() {
+        return ripper.status().setServiceState(state.name());
+    }
+
+    public enum State {
         UNDEFINED, NEW, STARTED, DISCIID, CDDB, RIPPING_STARTED, TERMINATED;
     }
 

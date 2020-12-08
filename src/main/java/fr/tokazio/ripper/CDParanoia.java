@@ -43,48 +43,16 @@ public class CDParanoia {
     public static final String PG_UNCORRECTED_SKIPPED = "V";//V    Uncorrected error/skip
     private static final Logger LOGGER = LoggerFactory.getLogger(CDParanoia.class);
     private final StringBuilder sb = new StringBuilder();
+    private ProgressListener progressListener;
 
     public CDParanoia() {
         args.add("cdparanoia");
     }
 
-    public int rip(int trackNo, File outFile) throws IOException, InterruptedException {
-        args.add(String.valueOf(trackNo));
-        args.add(outFile.getAbsolutePath());
-        try {
-            run();
-        } catch (ProcException e) {
-            LOGGER.error("\nError ripping track #" + trackNo + " to " + outFile.getAbsolutePath());
-            return e.getCode();
-        }
-        return 0;
+    public CDParanoia onProgress(ProgressListener listener) {
+        this.progressListener = listener;
+        return this;
     }
-
-    //1 6 970 152
-
-    /*
-
-    36 456 / 235.2 = 155
-    to
-    1 410 024 / 235.2 = 599...
-
-    35 280 / 235.2 = 150
-    to
-    7 006 608 / 235.2 = 29 790
-
-    2-----
-    5644800 = 24 000
-    to
-    7027776
-
-    5643624 = 23 995
-
-
-
-    1: 4927-150 in frames: 4777 frames - 1 frame is 2352 bytes
-       -> 4777*2352 = 11235504 bytes
-    2: 22735-4927 : 17808 frames
-    */
 
     private String run() throws IOException, InterruptedException, ProcException {
         final String[] cmd = args.toArray(new String[0]);
@@ -115,7 +83,7 @@ public class CDParanoia {
         Thread t2 = new Thread() {
             public void run() {
                 int at = 0;
-                int first = 0;
+                int maxAt = 0;
                 int nbCorr = 0;
                 int nbOverlap = 0;
                 int nbJitter = 0;
@@ -127,10 +95,12 @@ public class CDParanoia {
                             sb.append(line);
                             if (line.contains("[read]")) {
                                 at = Integer.parseInt(line.substring(line.lastIndexOf(' ') + 1));
-                                if (first == 0) {
-                                    first = at;
+                                if (at > maxAt) {
+                                    maxAt = at;
                                 }
-                                LOGGER.debug((at - first) + " (" + line + ")");
+                                if (progressListener != null) {
+                                    progressListener.onProgress(maxAt);
+                                }
                             }
 
                             if (line.contains("[correction]")) {
@@ -149,7 +119,7 @@ public class CDParanoia {
                         LOGGER.warn("Error reading ripping process output", ex);
                     }
                 }
-                LOGGER.info((at - first) + " overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x");
+                LOGGER.info("Quality info: overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x jitter: " + nbJitter + "x");
             }
         };
         t2.setDaemon(true);
@@ -166,12 +136,86 @@ public class CDParanoia {
         return sb.toString();
     }
 
+    public int rip(int trackNo, File outFile) throws IOException, InterruptedException {
+        args.add(String.valueOf(trackNo));
+        args.add(outFile.getAbsolutePath());
+        try {
+            run();
+        } catch (ProcException e) {
+            LOGGER.error("\nError ripping track #" + trackNo + " to " + outFile.getAbsolutePath());
+            return e.getCode();
+        }
+        return 0;
+    }
+
+    //1 6 970 152
+
+    /*
+
+track_num = 160 start sector 4350 msf: 1,0,0
+track_num = 161 start sector 107850 msf: 24,0,0
+track_num = 162 start sector 330642 msf: 73,30,42
+track_num = 1 start sector 0 msf: 0,2,0
+track_num = 2 start sector 4777 msf: 1,5,52
+track_num = 3 start sector 22585 msf: 5,3,10
+track_num = 4 start sector 42932 msf: 9,34,32
+track_num = 5 start sector 57150 msf: 12,44,0
+track_num = 6 start sector 72070 msf: 16,2,70
+track_num = 7 start sector 88362 msf: 19,40,12
+track_num = 8 start sector 105290 msf: 23,25,65
+track_num = 9 start sector 118987 msf: 26,28,37
+track_num = 10 start sector 134922 msf: 30,0,72
+track_num = 11 start sector 149090 msf: 33,9,65
+track_num = 12 start sector 164567 msf: 36,36,17
+track_num = 13 start sector 169595 msf: 37,43,20
+track_num = 14 start sector 185380 msf: 41,13,55
+track_num = 15 start sector 202267 msf: 44,58,67
+track_num = 16 start sector 212790 msf: 47,19,15
+track_num = 17 start sector 226995 msf: 50,28,45
+track_num = 18 start sector 239875 msf: 53,20,25
+track_num = 19 start sector 253197 msf: 56,17,72
+track_num = 20 start sector 276497 msf: 61,28,47
+track_num = 21 start sector 291592 msf: 64,49,67
+track_num = 22 start sector 299282 msf: 66,32,32
+track_num = 23 start sector 302995 msf: 67,21,70
+track_num = 24 start sector 312430 msf: 69,27,55
+
+
+    1:
+        début à 36456
+        fin à 7006608
+        soit taille de 7006608-36456 = 6970152
+        380 read
+        0 à 4777 frames
+        6970152 / 4777 = 1460
+        7006608 / 4777 = 1466
+    2:
+        début à 5644800
+        fin à 26717544
+        soit taille de 26717544-5644800 = 21072744
+        1178 read
+        4777 à 22585 = 17808 frames(sector)
+        21072744 / 17808 = 1183
+        26717544 / 17808 = 1500
+
+
+    1: 4927-150 in frames: 4777 frames - 1 frame is 2352 bytes
+       -> 4777*2352 = 11235504 bytes
+    2: 22735-4927 : 17808 frames
+    */
+
+    public interface ProgressListener {
+
+        void onProgress(int position);
+
+    }
+
     /**
      * -A --analyze-drive              : run and log a complete analysis of drive
-     *                                     caching, timing and reading behavior;
-     *                                     verifies that cdparanoia is correctly
-     *                                     modelling a sprcific drive's cache and
-     *                                     read behavior. Implies -vQL
+     * caching, timing and reading behavior;
+     * verifies that cdparanoia is correctly
+     * modelling a sprcific drive's cache and
+     * read behavior. Implies -vQL
      */
     public String analyzeDrive() throws InterruptedException, ProcException, IOException {
         args.add("-A");
