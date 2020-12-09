@@ -49,4 +49,8 @@ public class RipperService {
     public boolean isRipping() {
         return rippingSessionFactory.hasActiveSession();
     }
+
+    public void abort() {
+        rippingSessionFactory.abort();
+    }
 }

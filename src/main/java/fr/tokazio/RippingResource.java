@@ -33,6 +33,12 @@ public class RippingResource {
         return ripperService.status();
     }
 
+    @Path("/abort")
+    @GET
+    public void abort() {
+        ripperService.abort();
+    }
+
     @GET
     public RippingStatus status() throws NoRippingSession {
         return ripperService.status();

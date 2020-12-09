@@ -30,7 +30,7 @@ public class RippingSessionFactory {
     public RippingSession resume() throws CDDBException, RippingSessionException, DiscIdException, RipException {
         if (currentSessionThread != null) {
             LOGGER.debug("A session is already running: " + currentSessionThread.currentSession().uuid());
-            currentSessionThread.resume();
+            currentSessionThread.run();
         } else {
             currentSessionThread = new RippingSessionThread(doResume());
             currentSessionThread.start();
@@ -88,5 +88,12 @@ public class RippingSessionFactory {
 
     public RippingStatus status() {
         return hasActiveSession() ? currentSessionThread.status() : new RippingStatus().setServiceState("NO_ACTIVE_SESSION");
+    }
+
+    public void abort() {
+        if (hasActiveSession()) {
+            currentSessionThread.interrupt();
+            currentSessionThread = null;
+        }
     }
 }
