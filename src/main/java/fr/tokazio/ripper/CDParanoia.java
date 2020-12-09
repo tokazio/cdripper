@@ -136,16 +136,10 @@ public class CDParanoia {
         return sb.toString();
     }
 
-    public int rip(int trackNo, File outFile) throws IOException, InterruptedException {
+    public void rip(int trackNo, File outFile) throws IOException, InterruptedException, ProcException {
         args.add(String.valueOf(trackNo));
         args.add(outFile.getAbsolutePath());
-        try {
-            run();
-        } catch (ProcException e) {
-            LOGGER.error("\nError ripping track #" + trackNo + " to " + outFile.getAbsolutePath());
-            return e.getCode();
-        }
-        return 0;
+        run();
     }
 
     //1 6 970 152

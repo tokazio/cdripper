@@ -4,6 +4,7 @@ import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.ripper.CDParanoia;
+import fr.tokazio.ripper.ProcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +84,7 @@ public abstract class CDRipper {
 
                 new CDParanoia()
                         .verbose()
-                        .neverSkip(25)
+                        .neverSkip(0)
                         .forceOutputProgressToErr()
                         .logDebug()
                         .onProgress((position, nbCorr, nbOverlap, nbJitter) -> {
@@ -92,7 +93,6 @@ public abstract class CDRipper {
                             LOGGER.debug("\tQuality info: overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x jitter: " + nbJitter + "x");
                         })
                         .rip(status.getTrackId(), tempFile);
-
                 if (!tempFile.renameTo(wavFile)) {
                     LOGGER.error("Unable to rename " + tempFile.getAbsolutePath() + " to " + wavFile.getAbsolutePath());
                 } else {
@@ -106,7 +106,8 @@ public abstract class CDRipper {
                     }
                 }
 
-            } catch (IOException | InterruptedException ex) {
+
+            } catch (ProcException | IOException | InterruptedException ex) {
                 LOGGER.error("Error ripping disc to " + tmpDir.getAbsolutePath(), ex);
             }
         });
