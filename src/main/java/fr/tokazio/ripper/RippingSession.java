@@ -10,6 +10,7 @@ import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
+import fr.tokazio.events.WebsocketEvent;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.Serializable;
@@ -29,20 +31,30 @@ public class RippingSession implements Serializable {
 
     @JsonIgnore
     private static final Logger LOGGER = LoggerFactory.getLogger(RippingSession.class);
+
     @JsonIgnore
     private static final ExecutorService executor = Executors.newFixedThreadPool(2);
+
+    @Inject
+    BeanManager beanManager;
+
     @JsonProperty
     private final String uuid = UUID.randomUUID().toString();
+
     //@Inject
-    //EventBus bus;
+    //Instance<Event> event;
+
     @Inject
     DiscogsService discogsService;
-    @JsonProperty
-    private DiscIdData discIdData;
-    @JsonProperty
-    private CddbData cddbData;
     @JsonIgnore
     private CDRipper ripper;
+
+    @JsonProperty
+    private DiscIdData discIdData;
+
+    @JsonProperty
+    private CddbData cddbData;
+
     @JsonProperty
     private State state = State.NEW;
 
@@ -52,6 +64,8 @@ public class RippingSession implements Serializable {
         }
         state = State.STARTED;
         LOGGER.info("Started ripping session #" + uuid);
+        beanManager.fireEvent(new WebsocketEvent("Started ripping session #" + uuid));
+//        event.get().fireAsync(new WebsocketEvent("Started ripping session #" + uuid));
         run();
     }
 
@@ -124,7 +138,7 @@ public class RippingSession implements Serializable {
 
         ripper = provideRipper(rippingDir)
                 .setTrackRippedListener((discData, trackData, file) -> {
-                    //bus.publish("ripping-track-end", file);
+//                    event.get().fireAsync(new WebsocketEvent("Ripping " + file.getAbsolutePath()+" ended"));
                     LOGGER.debug("Flac encoder for " + file.getAbsolutePath() + " to " + rippingDir.getAbsolutePath());
                     final Encoder encoder = new FlacEncoder(discData, trackData, file, RipperUtils.tidyFilename(new File(rippingDir, discData.getArtist() + "-" + discData.getAlbum())));
                     executor.execute(encoder);
@@ -132,12 +146,12 @@ public class RippingSession implements Serializable {
                 .setDiscRippedListener(new CDDiscRippedListener() {
                     @Override
                     public void ripped() {
-                        //bus.publish("ripping-disc-end", this);
+//                        event.get().fireAsync(new WebsocketEvent("Ripping disc ended"));
                     }
                 });
         LOGGER.info("Ripping with " + ripper.getClass().getName());
         ripper.start(this.discIdData, this.cddbData);
-        //bus.publish("ripping-disc-start", this);
+//        event.get().fireAsync(new WebsocketEvent("Ripping disc started"));
     }
 
     private void getTrackMetas(final String artist, String title) {

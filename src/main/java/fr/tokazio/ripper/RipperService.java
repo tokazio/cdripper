@@ -20,9 +20,6 @@ public class RipperService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RipperService.class);
 
-    //@Inject
-    //EventBus bus;
-
     @Inject
     RippingSessionFactory rippingSessionFactory;
 

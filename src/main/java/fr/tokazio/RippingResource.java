@@ -29,7 +29,16 @@ public class RippingResource {
     @Path("/rip")
     @GET
     public RippingStatus rip() throws DiscIdException, RippingSessionException, CDDBException, RipException {
-        ripperService.resume(null);
+        new Thread() {
+
+            public void run() {
+                try {
+                    ripperService.resume(null);
+                } catch (RipException | CDDBException | DiscIdException | RippingSessionException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
         return ripperService.status();
     }
 
