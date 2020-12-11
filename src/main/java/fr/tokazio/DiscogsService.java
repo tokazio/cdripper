@@ -35,12 +35,21 @@ public class DiscogsService {
     @Inject
     EventBus bus;
 
-    ObjectMapper mapper = new ObjectMapper();
+    @Inject
+    ObjectMapper mapper;// = new ObjectMapper();
 
     private DiscogsClient client;
 
-    public DiscogsService() {
-        new JSONModuleCustomizer().customize(mapper);
+    private DiscogsClient client() {
+        if (client != null) {
+            return client;
+        }
+        connect();
+        return client;
+    }
+
+    private void connect() {
+        //new JSONModuleCustomizer().customize(mapper);
         final File credsFile = new File(DISCOGS_CRED);
         if (credsFile.exists()) {
             try {
@@ -61,11 +70,12 @@ public class DiscogsService {
 
         client.getRequestToken();
 
-        String url = client.getAuthorizationURL();
+        final String url = client.getAuthorizationURL();
         //TODO automatiser
         LOGGER.warn("!!!!!!!!!!!!!!!!\nCliquez ici pour autoriser: " + url + "\n!!!!!!!!!!!!!!!!");
         bus.publish("websocket", new WebsocketEvent("discogsAuthRequired::" + url));
     }
+
 
     static String getCallbackUrl() {
         String url = "http://127.0.0.1:8080/discogs/callback";
@@ -81,9 +91,9 @@ public class DiscogsService {
 
     public void callback(String token, String verifier) {
         LOGGER.debug("Discogs callback: " + token + " | " + verifier);
-        client.getAccessToken(verifier);
-        String oauth_token = client.getOauthToken();
-        String oauth_token_secret = client.getOauthTokenSecret();
+        client().getAccessToken(verifier);
+        String oauth_token = client().getOauthToken();
+        String oauth_token_secret = client().getOauthTokenSecret();
 
         try {
             mapper.writeValue(new File(DISCOGS_CRED), new DiscogsCred(oauth_token, oauth_token_secret));
@@ -96,7 +106,7 @@ public class DiscogsService {
     }
 
     public List<Result> search(String artist, String title, String year) throws JsonProcessingException {
-        String body = client.search(artist, title, year);
+        String body = client().search(artist, title, year);
         System.out.println(body);
         PaginatedResult all = mapper.readValue(body, PaginatedResult.class);
 
