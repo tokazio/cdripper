@@ -1,15 +1,24 @@
 package fr.tokazio;
 
 import com.adamdonegan.Discogs4J.client.DiscogsClient;
+import com.adamdonegan.Discogs4J.models.PaginatedResult;
+import com.adamdonegan.Discogs4J.models.Result;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.tokazio.events.WebsocketEvent;
+import io.vertx.core.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * https://github.com/ajdons/discogs4j
@@ -23,11 +32,15 @@ public class DiscogsService {
     private static final String CONSUMER_KEY = "qrwjUeBmOaGjweCplcaj";
     private static final String CONSUMER_SECRET = "OUIgMEYWsgeHvuThZKMZVlAHHASGDpIM";
 
+    @Inject
+    EventBus bus;
+
     ObjectMapper mapper = new ObjectMapper();
 
     private DiscogsClient client;
 
     public DiscogsService() {
+        new JSONModuleCustomizer().customize(mapper);
         final File credsFile = new File(DISCOGS_CRED);
         if (credsFile.exists()) {
             try {
@@ -51,7 +64,7 @@ public class DiscogsService {
         String url = client.getAuthorizationURL();
         //TODO automatiser
         LOGGER.warn("!!!!!!!!!!!!!!!!\nCliquez ici pour autoriser: " + url + "\n!!!!!!!!!!!!!!!!");
-
+        bus.publish("websocket", new WebsocketEvent("discogsAuthRequired::" + url));
     }
 
     static String getCallbackUrl() {
@@ -82,7 +95,24 @@ public class DiscogsService {
         //TODO save it
     }
 
-    public String search(String query) {
-        return client.search(query);
+    public List<Result> search(String artist, String title, String year) throws JsonProcessingException {
+        String body = client.search(artist, title, year);
+        System.out.println(body);
+        PaginatedResult all = mapper.readValue(body, PaginatedResult.class);
+
+        //prendre year si possible
+        //prendre country = france si présent
+        //prendre le plus de community have
+
+        long nbFr = all.getResults().stream().filter(r -> "FRANCE".equals(r.getCountry().toUpperCase())).count();
+
+
+        if (nbFr > 0) {
+            return all.getResults().stream().filter(r -> {
+                return "FRANCE".equals(r.getCountry().toUpperCase());
+            }).sorted(Comparator.comparing(a -> a.getCommunity().getHave()))
+                    .collect(Collectors.toList());
+        }
+        return all.getResults().stream().sorted(Comparator.comparing(a -> a.getCommunity().getHave())).collect(Collectors.toList());
     }
 }

@@ -1,10 +1,10 @@
 package org.boncey.cdripper;
 
-import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.ripper.CDParanoia;
 import fr.tokazio.ripper.ProcException;
+import fr.tokazio.ripper.RippingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,10 +18,14 @@ public abstract class CDRipper {
     private static final String EXT = ".wav";
 
     private final File rippingDir;
+    private CDTrackRippingListener trackRippinglistener;
     private CDTrackRippedListener trackRippedlistener;
     private CDDiscRippedListener discRippedListener;
+    private CDRippingProgressListener progressListener;
 
     private final RippingStatus status = new RippingStatus();
+    private CDParanoia cdparanoia;
+
 
     public CDRipper(final File rippingDir) {
         LOGGER.debug("Ripping to folder " + rippingDir.getAbsolutePath() + "...");
@@ -67,6 +71,10 @@ public abstract class CDRipper {
 
     private void rip(final DiscIdData discIdData, final CddbData discData, final File tmpDir) {
         LOGGER.debug("Ripping " + discData.getTracks().size() + " track to " + tmpDir.getAbsolutePath() + "...");
+        status.setServiceState("RIPPING");
+        status.setDiscArtist(discData.getArtist());
+        status.setDiscTitle(discData.getAlbum());
+        status.setTrackNb(discData.getTracks().size());
         discData.getTracks().forEach(trackData -> {
             status.setTrackId(-1);
             try {
@@ -77,20 +85,32 @@ public abstract class CDRipper {
                 LOGGER.debug("Ripping " + tempFile.getAbsolutePath() + " to tmp " + wavFile.getAbsolutePath() + "...");
 
                 status.setTrackId(Integer.parseInt(trackData.getIndex()) + 1);
+                status.setTrackArtist(trackData.getArtist());
+                status.setTrackTitle(trackData.getTitle());
+
 
                 final float maxReadPos = discIdData.getFrameLenOf(status.getTrackId()) * 1500;
 
                 LOGGER.debug("Reading track #" + status.getTrackId() + " to pos " + maxReadPos);
 
-                new CDParanoia()
+                if (trackRippinglistener != null) {
+                    trackRippinglistener.started(status);
+                }
+
+                cdparanoia = new CDParanoia()
                         .verbose()
                         .neverSkip(0)
                         .forceOutputProgressToErr()
                         .logDebug()
                         .onProgress((position, nbCorr, nbOverlap, nbJitter) -> {
-                            status.setTrackProgress((int) ((position / maxReadPos) * 100));
-                            LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "% (" + position + ")");
-                            LOGGER.debug("\tQuality info: overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x jitter: " + nbJitter + "x");
+                            int trackProgress = (int) ((position / maxReadPos) * 100);
+                            status.setTrackProgress(trackProgress);
+                            if (progressListener != null) {
+                                progressListener.onProgress(status);
+                            }
+                            //LOGGER.debug("Track #" + status.getTrackId() + " " + status.getTrackProgress() + "% (" + position + ")");
+                            //LOGGER.debug("Track #" + status.getTrackId() + " @" + position);
+                            //LOGGER.debug("\tQuality info: overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x jitter: " + nbJitter + "x");
                         })
                         .rip(status.getTrackId(), tempFile);
                 if (!tempFile.renameTo(wavFile)) {
@@ -130,5 +150,20 @@ public abstract class CDRipper {
 
     public RippingStatus status() {
         return status;
+    }
+
+    public void stop() {
+        LOGGER.debug("Stopping CDRipper...");
+        cdparanoia.stop();
+    }
+
+    public CDRipper setProgressListener(CDRippingProgressListener listener) {
+        this.progressListener = listener;
+        return this;
+    }
+
+    public CDRipper setStartedListener(CDTrackRippingListener listener) {
+        this.trackRippinglistener = listener;
+        return this;
     }
 }

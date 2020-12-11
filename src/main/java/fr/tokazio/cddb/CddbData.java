@@ -8,7 +8,7 @@ public class CddbData {
     private final String cdid;
     private final String artist;
     private final String album;
-
+    private String year = "";
     private final List<Track> trackNames = new LinkedList<>();
 
     public CddbData(String cdid, String title) {
@@ -39,15 +39,12 @@ public class CddbData {
         return trackNames;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("CddbData{");
-        sb.append("cdid='").append(cdid).append('\'');
-        sb.append(", album='").append(album).append('\'');
-        sb.append(", artist='").append(artist).append('\'');
-        sb.append(", trackNames=").append(trackNames);
-        sb.append('}');
-        return sb.toString();
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(final String year) {
+        this.year = year != null ? year : "";
     }
 
     public static class Track {

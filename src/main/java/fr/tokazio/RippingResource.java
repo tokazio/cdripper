@@ -5,6 +5,7 @@ import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.ripper.NoRippingSession;
 import fr.tokazio.ripper.RipperService;
 import fr.tokazio.ripper.RippingSessionException;
+import fr.tokazio.ripper.RippingStatus;
 import org.boncey.cdripper.RipException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -23,7 +24,6 @@ public class RippingResource {
 
     @Inject
     RipperService ripperService;
-
 
     //TODO idempotent (ne devrait pas faire status)
     @Path("/rip")

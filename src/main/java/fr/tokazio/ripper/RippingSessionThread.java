@@ -1,6 +1,5 @@
 package fr.tokazio.ripper;
 
-import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.discid.DiscIdException;
 import org.boncey.cdripper.RipException;
@@ -22,15 +21,26 @@ public class RippingSessionThread extends Thread {
     }
 
     @Override
+    public void interrupt() {
+        LOGGER.debug("Interrupting ripping session thread...");
+        currentSession().abort();
+        super.interrupt();
+    }
+
+    @Override
     public void run() {
+        re();
+    }
+
+    public RippingStatus status() {
+        return session.status();
+    }
+
+    public void re() {
         try {
             currentSession().run();
         } catch (DiscIdException | CDDBException | RipException | RippingSessionException e) {
             LOGGER.error("Error in ripping session #" + session.uuid(), e);
         }
-    }
-
-    public RippingStatus status() {
-        return session.status();
     }
 }

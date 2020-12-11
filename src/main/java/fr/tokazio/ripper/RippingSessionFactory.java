@@ -1,6 +1,5 @@
 package fr.tokazio.ripper;
 
-import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
@@ -30,7 +29,7 @@ public class RippingSessionFactory {
     public RippingSession resume() throws CDDBException, RippingSessionException, DiscIdException, RipException {
         if (currentSessionThread != null) {
             LOGGER.debug("A session is already running: " + currentSessionThread.currentSession().uuid());
-            currentSessionThread.run();
+            currentSessionThread.re();
         } else {
             currentSessionThread = new RippingSessionThread(doResume());
             currentSessionThread.start();
@@ -92,6 +91,7 @@ public class RippingSessionFactory {
 
     public void abort() {
         if (hasActiveSession()) {
+            LOGGER.debug("Aborting ripping session from factory...");
             currentSessionThread.interrupt();
             currentSessionThread = null;
         }

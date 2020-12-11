@@ -1,6 +1,5 @@
 package fr.tokazio.ripper;
 
-import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
@@ -48,6 +47,7 @@ public class RipperService {
     }
 
     public void abort() {
+        LOGGER.debug("Aborting ripping session from service...");
         rippingSessionFactory.abort();
     }
 }

@@ -20,6 +20,8 @@ dependencies {
     implementation 'io.quarkus:quarkus-undertow-websockets'
     compile group: 'com.github.hypfvieh', name: 'dbus-java', version: '3.2.3'
 
+    compile 'org.apache.commons:commons-lang3:3.11'
+
     implementation 'fr.tokazio:FileCollector:1.0-SNAPSHOT'
 
     implementation 'io.netty:netty-transport-native-epoll'

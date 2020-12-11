@@ -1,16 +1,17 @@
 package fr.tokazio.ripper;
 
+import com.adamdonegan.Discogs4J.models.Result;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.tokazio.DiscogsService;
 import fr.tokazio.OS;
-import fr.tokazio.RippingStatus;
 import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.CddbData;
 import fr.tokazio.cddb.discid.DiscId;
 import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.events.WebsocketEvent;
+import io.vertx.core.eventbus.EventBus;
 import org.boncey.cdripper.*;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
@@ -18,10 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
-import java.io.File;
-import java.io.Serializable;
+import java.io.*;
+import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,18 +37,22 @@ public class RippingSession implements Serializable {
     private static final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     @Inject
-    BeanManager beanManager;
+    EventBus bus;
 
     @JsonProperty
     private final String uuid = UUID.randomUUID().toString();
 
-    //@Inject
-    //Instance<Event> event;
-
     @Inject
     DiscogsService discogsService;
+
     @JsonIgnore
     private CDRipper ripper;
+
+    @JsonIgnore
+    private Thread rippingThread;
+
+    @JsonIgnore
+    private File rippingDir;
 
     @JsonProperty
     private DiscIdData discIdData;
@@ -58,14 +63,14 @@ public class RippingSession implements Serializable {
     @JsonProperty
     private State state = State.NEW;
 
+
     public void start() throws RippingSessionException, DiscIdException, CDDBException, RipException {
         if (!state.equals(State.NEW)) {
             throw new RippingSessionException("Ripping session already started: " + state.name());
         }
         state = State.STARTED;
         LOGGER.info("Started ripping session #" + uuid);
-        beanManager.fireEvent(new WebsocketEvent("Started ripping session #" + uuid));
-//        event.get().fireAsync(new WebsocketEvent("Started ripping session #" + uuid));
+        bus.publish("websocket", new WebsocketEvent("Started ripping session #" + uuid));
         run();
     }
 
@@ -82,8 +87,12 @@ public class RippingSession implements Serializable {
                 findCddb();
                 break;
             case CDDB:
-                rip();
-                getAlbumMetas();
+                ripAsync();
+                try {
+                    getAlbumMetas();
+                } catch (IOException e) {
+                    LOGGER.error("Error getting album meta data", e);
+                }
                 break;
             case RIPPING_STARTED:
                 //ripping in progress
@@ -119,9 +128,27 @@ public class RippingSession implements Serializable {
         run();
     }
 
+    private void ripAsync() {
+        if (rippingThread == null) {
+            rippingThread = new Thread() {
+
+                @Override
+                public void run() {
+                    try {
+                        rip();
+                    } catch (RipException e) {
+                        LOGGER.error("Error ripping async", e);
+                    }
+                }
+
+            };
+            rippingThread.start();
+        }
+    }
+
     private void rip() throws RipException {
         this.state = State.RIPPING_STARTED;
-        File rippingDir;
+
 
         if (OS.isMac()) {
             rippingDir = new File("/users/romain/audio");
@@ -137,8 +164,14 @@ public class RippingSession implements Serializable {
         }
 
         ripper = provideRipper(rippingDir)
+                .setProgressListener((status) -> {
+                    bus.publish("websocket", new WebsocketEvent("rippingProgress::" + status.asJson()));
+                })
+                .setStartedListener(status -> {
+                    bus.publish("websocket", new WebsocketEvent("Ripping " + status.getTrackArtist() + " - " + status.getTrackTitle() + " started"));
+                })
                 .setTrackRippedListener((discData, trackData, file) -> {
-//                    event.get().fireAsync(new WebsocketEvent("Ripping " + file.getAbsolutePath()+" ended"));
+                    bus.publish("websocket", new WebsocketEvent("Ripping " + file.getAbsolutePath() + " ended"));
                     LOGGER.debug("Flac encoder for " + file.getAbsolutePath() + " to " + rippingDir.getAbsolutePath());
                     final Encoder encoder = new FlacEncoder(discData, trackData, file, RipperUtils.tidyFilename(new File(rippingDir, discData.getArtist() + "-" + discData.getAlbum())));
                     executor.execute(encoder);
@@ -146,22 +179,64 @@ public class RippingSession implements Serializable {
                 .setDiscRippedListener(new CDDiscRippedListener() {
                     @Override
                     public void ripped() {
-//                        event.get().fireAsync(new WebsocketEvent("Ripping disc ended"));
+                        bus.publish("websocket", new WebsocketEvent("Ripping disc ended"));
                     }
                 });
         LOGGER.info("Ripping with " + ripper.getClass().getName());
         ripper.start(this.discIdData, this.cddbData);
-//        event.get().fireAsync(new WebsocketEvent("Ripping disc started"));
+        bus.publish("websocket", new WebsocketEvent("Ripping disc started"));
     }
 
-    private void getTrackMetas(final String artist, String title) {
-        LOGGER.info(discogsService.search(artist + " " + title));
+    private void getTrackMetas(final String artist, String title, String year) throws IOException {
+        List<Result> results = discogsService.search(artist, title, year);
+        if (results != null) {
+            LOGGER.info(results.toString());
+            File coverDir = new File(rippingDir, "/covers");
+            if (!coverDir.exists()) {
+                coverDir.mkdirs();
+            }
+            if (!results.isEmpty()) {
+                imageFromUrl(results.get(0).getCover_image(), coverDir.getAbsolutePath() + "/" + artist + "-" + title + ".jpg");
+            }
+        }
     }
 
-    private void getAlbumMetas() {
-        LOGGER.info(discogsService.search(this.cddbData.getArtist() + " " + this.cddbData.getAlbum()));
+    private String urlEncode(String str) {
+        /*
+        try {
+            return URLEncoder.encode(str, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("Error encoding url",e);
+        }
+         */
+        return str;//str.replaceAll("\\(", "%28").replaceAll("\\)", "%29");
+    }
+
+    private void getAlbumMetas() throws IOException {
+        List<Result> results = discogsService.search(this.cddbData.getArtist(), this.cddbData.getAlbum(), this.cddbData.getYear());
+        if (results != null) {
+            LOGGER.info(results.toString());
+            File coverDir = new File(rippingDir, "/covers");
+            if (!coverDir.exists()) {
+                coverDir.mkdirs();
+            }
+            imageFromUrl(results.get(0).getCover_image(), coverDir.getAbsolutePath() + "/" + this.cddbData.getArtist() + "-" + this.cddbData.getAlbum() + ".jpg");
+        }
         for (CddbData.Track track : this.cddbData.getTracks()) {
-            getTrackMetas(track.getArtist(), track.getTitle());
+            getTrackMetas(track.getArtist(), track.getTitle(), this.cddbData.getYear());
+        }
+    }
+
+    private void imageFromUrl(String urlStr, String destinationFile) throws IOException {
+        URL url = new URL(urlStr);
+        try (InputStream is = url.openStream()) {
+            try (OutputStream os = new FileOutputStream(destinationFile)) {
+                byte[] b = new byte[2048];
+                int length;
+                while ((length = is.read(b)) != -1) {
+                    os.write(b, 0, length);
+                }
+            }
         }
     }
 
@@ -184,6 +259,11 @@ public class RippingSession implements Serializable {
 
     public boolean isActive() {
         return !State.TERMINATED.equals(state);
+    }
+
+    public void abort() {
+        LOGGER.debug("Aborting ripping session #" + uuid + "...");
+        ripper.stop();
     }
 
     public enum State {

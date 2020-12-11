@@ -41,6 +41,11 @@ public class Cddb {
                     cddbData.addTrack(detail.trackNames[j]);
                 }
                 LOGGER.debug("Extended data: " + detail.extendedData);
+                if (detail.extendedData.contains("YEAR:")) {
+                    int pos = detail.extendedData.indexOf("YEAR: ") + 6;
+                    cddbData.setYear(detail.extendedData.substring(pos, detail.extendedData.indexOf(' ', pos)).trim());
+                    LOGGER.debug("Detected year is " + cddbData.getYear());
+                }
                 for (int j = 0; j < detail.extendedTrackData.length; j++) {
                     LOGGER.debug(pad(j) + ": " + detail.extendedTrackData[j]);
                 }

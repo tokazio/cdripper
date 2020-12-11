@@ -1,6 +1,7 @@
 package fr.tokazio;
 
 import fr.tokazio.events.WebsocketEvent;
+import io.quarkus.vertx.ConsumeEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ public class LeWebSock {
         LOGGER.info("[WEBSOCKET] " + message);
     }
 
+    @ConsumeEvent(value = "websocket", blocking = true)
     void message(@ObservesAsync WebsocketEvent message) {
         broadcast(message.getMessage());
     }

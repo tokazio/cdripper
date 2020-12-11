@@ -29,14 +29,24 @@
         <q-drawer bordered content-style="background-color:#666" show-if-above side="left" width="160">
             <div class="column" style="width:100%;text-align:center">
                 Gauche
+                Connecté: {{connected}}
             </div>
         </q-drawer>
         <q-page-container>
+
+            <q-banner class="bg-purple-8 text-white" v-if="rippingStatusObj !== null">
+                <div>Ripping {{rippingStatusObj.trackId}}/{{rippingStatusObj.trackNb}}: {{rippingStatusObj.trackArtist}}
+                    - {{rippingStatusObj.trackTitle}}
+                </div>
+                <q-linear-progress :value="rippingProgress" class="q-mt-sm" color="purple" rounded size="20px" stripe/>
+            </q-banner>
+
             <q-page>
+
+                Afficher la bibliothèque ici
+
                 <div class="row">
-                    Centre
-                    <q-btn @click="rip" label="Rip"></q-btn>
-                    <q-linear-progress :value="rippingProgress" class="q-mt-sm" rounded size="20px" stripe/>
+                    <q-btn @click="rip" label="Force CD rip"></q-btn>
                 </div>
             </q-page>
         </q-page-container>
@@ -47,7 +57,7 @@
 
 <!-- Add the following at the end of your body tag -->
 
-<script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/quasar@1.14.1/dist/quasar.umd.modern.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/quasar@1.14.1/dist/lang/fr.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -62,9 +72,12 @@
           return {
                 connected: false,
                 rippingProgress: 0,
+                rippingStatusObj: null,
           }
         },
         methods: {
+
+
 
             rip : function(){
                   axios({
@@ -83,11 +96,21 @@
                 this.connection.onmessage = function(event) {
                   console.log(event);
 
-                  if(event.contains("rippingProgress::"))                  {
-                        this.rippingProgress = event.split('::')[1];
+                  if(event.data.includes("rippingProgress::"))                  {
+                        str = event.data.split('::')[1]
+                        console.log(str)
+                        const status = JSON.parse(str)
+                        console.log(status)
+                        me.rippingProgress = status.trackProgress/100
+                        me.rippingStatusObj = status
+                  }else if(event.data.includes("discogsAuthRequired::"))                  {
+                        url = event.data.split('::')[1]
+                        console.log(url)
+                        this.openURL(url)
+                  }else{
+                      //TODO handle server messages
+                      me.notif(event.data,'info')
                   }
-
-                  //TODO handle server messages
                 }
 
                 this.connection.onopen = function(event) {

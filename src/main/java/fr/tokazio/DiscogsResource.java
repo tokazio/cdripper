@@ -1,12 +1,13 @@
 package fr.tokazio;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.adamdonegan.Discogs4J.models.Result;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/discogs")
 @Produces(MediaType.APPLICATION_JSON)
@@ -14,14 +15,12 @@ import javax.ws.rs.core.MediaType;
 @ApplicationScoped
 public class DiscogsResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DiscogsResource.class);
-
     @Inject
     DiscogsService service;
 
     @GET
-    public String search(@QueryParam("query") String query) {
-        return service.search(query);
+    public List<Result> search(@QueryParam("artist") String artist, @QueryParam("title") String title, @QueryParam("year") String year) throws JsonProcessingException {
+        return service.search(artist, title, year);
     }
 
     //http://127.0.0.1:8080/discogs/callback?oauth_token=rntZDwsiSmyllXShdmsLMrVBGdZdpNaXnVbrLFDw&oauth_verifier=NDNjJLSLuV

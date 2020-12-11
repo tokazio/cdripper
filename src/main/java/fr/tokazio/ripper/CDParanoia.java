@@ -44,6 +44,9 @@ public class CDParanoia {
     private static final Logger LOGGER = LoggerFactory.getLogger(CDParanoia.class);
     private final StringBuilder sb = new StringBuilder();
     private ProgressListener progressListener;
+    private Thread t1;
+    private Thread t2;
+    private Process proc;
 
     public CDParanoia() {
         args.add("cdparanoia");
@@ -60,8 +63,8 @@ public class CDParanoia {
         final ProcessBuilder pb = new ProcessBuilder(cmd);
         //pb.inheritIO();//ça c'est cool
         final long start = System.currentTimeMillis();
-        final Process proc = pb.start();
-        Thread t1 = new Thread() {
+        proc = pb.start();
+        t1 = new Thread() {
             public void run() {
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
                 while (proc.isAlive()) {
@@ -80,13 +83,14 @@ public class CDParanoia {
         t1.setDaemon(true);
         t1.setName("CDParanoia-inputStream-reader");
         t1.start();
-        Thread t2 = new Thread() {
+        t2 = new Thread() {
             public void run() {
                 int at = 0;
                 int maxAt = 0;
                 int nbCorr = 0;
                 int nbOverlap = 0;
                 int nbJitter = 0;
+                int minAt = -1;
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
                 while (proc.isAlive()) {
                     String line = "";
@@ -95,6 +99,9 @@ public class CDParanoia {
                             sb.append(line);
                             if (line.contains("[read]")) {
                                 at = Integer.parseInt(line.substring(line.lastIndexOf(' ') + 1));
+                                if (minAt < 0) {
+                                    minAt = at;
+                                }
                                 if (at > maxAt) {
                                     maxAt = at;
                                 }
@@ -119,6 +126,7 @@ public class CDParanoia {
                         LOGGER.warn("Error reading ripping process output", ex);
                     }
                 }
+                LOGGER.info("From " + minAt + " to " + maxAt);
                 LOGGER.info("Quality info: overlapped: " + nbOverlap + "x corrected: " + nbCorr + "x jitter: " + nbJitter + "x");
             }
         };
@@ -133,13 +141,31 @@ public class CDParanoia {
             throw new ProcException(proc.exitValue(), sb.toString());
         }
         LOGGER.info("Ripping track ended in " + (end - start) + "ms");
+
         return sb.toString();
     }
 
-    public void rip(int trackNo, File outFile) throws IOException, InterruptedException, ProcException {
+    public CDParanoia rip(int trackNo, File outFile) throws IOException, InterruptedException, ProcException {
         args.add(String.valueOf(trackNo));
         args.add(outFile.getAbsolutePath());
         run();
+        return this;
+    }
+
+    public void stop() {
+        LOGGER.debug("Stopping CDParanoia...");
+        if (t1 != null) {
+            LOGGER.debug("Stopping " + t1.getName() + " thread...");
+            t1.interrupt();
+        }
+        if (t2 != null) {
+            LOGGER.debug("Stopping " + t2.getName() + " thread...");
+            t2.interrupt();
+        }
+        if (proc != null) {
+            LOGGER.debug("Stopping cdparanoia process...");
+            proc.destroy();
+        }
     }
 
     //1 6 970 152

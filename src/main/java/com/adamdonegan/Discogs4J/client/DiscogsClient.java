@@ -1,11 +1,15 @@
 package com.adamdonegan.Discogs4J.client;
 
 import com.adamdonegan.Discogs4J.util.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class DiscogsClient {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DiscogsClient.class);
 
 	//Authorization
 	public static final String URL_REQUEST_TOKEN = "https://api.discogs.com/oauth/request_token";
@@ -158,13 +162,27 @@ public class DiscogsClient {
 	 * URL   : https://api.discogs.com/database/search?q={query}
 	 * params: query
 	 */
-	public String search(String query) {
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("query", query);
-		HttpRequest request = HttpRequest.get(replaceURLParams(URL_SEARCH, params), true).authorization(authenticatedHeader()).userAgent(userAgent);
-		System.out.println(request.toString());
-
-
+	public String search(final String artist, final String title, final String year) {
+		final StringBuilder sb = new StringBuilder();
+		boolean hasArtist = false;
+		if (artist != null && !artist.isEmpty()) {
+			hasArtist = true;
+			sb.append(artist);
+		}
+		if (title != null && !title.isEmpty()) {
+			if (hasArtist) {
+				sb.append(" - ");
+			}
+			sb.append(title);
+		}
+		sb.append("&format=cd&type=release");
+		if (year != null && !year.isEmpty()) {
+			sb.append("&year=").append(year);
+		}
+		final Map<String, String> params = new HashMap<>();
+		params.put("query", sb.toString());
+		final HttpRequest request = HttpRequest.get(replaceURLParams(URL_SEARCH, params), true).authorization(authenticatedHeader()).userAgent(userAgent);
+		LOGGER.debug(request.toString());
 		return request.body();
 	}
 
