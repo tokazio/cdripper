@@ -1,6 +1,5 @@
 package fr.tokazio.ripper;
 
-import fr.tokazio.cddb.CDDBException;
 import fr.tokazio.cddb.discid.DiscIdException;
 import org.boncey.cdripper.RipException;
 import org.slf4j.Logger;
@@ -39,7 +38,7 @@ public class RippingSessionThread extends Thread {
     public void re() {
         try {
             currentSession().run();
-        } catch (DiscIdException | CDDBException | RipException | RippingSessionException e) {
+        } catch (DiscIdException | RipException | RippingSessionException e) {
             LOGGER.error("Error in ripping session #" + session.uuid(), e);
         }
     }

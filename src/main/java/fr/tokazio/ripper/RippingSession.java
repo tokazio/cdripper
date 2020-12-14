@@ -12,7 +12,10 @@ import fr.tokazio.cddb.discid.DiscIdData;
 import fr.tokazio.cddb.discid.DiscIdException;
 import fr.tokazio.events.WebsocketEvent;
 import io.vertx.core.eventbus.EventBus;
-import org.boncey.cdripper.*;
+import org.boncey.cdripper.CDRipper;
+import org.boncey.cdripper.LinuxCDRipper;
+import org.boncey.cdripper.MacOSCDRipper;
+import org.boncey.cdripper.RipException;
 import org.boncey.cdripper.encoder.Encoder;
 import org.boncey.cdripper.encoder.FlacEncoder;
 import org.slf4j.Logger;
@@ -78,7 +81,7 @@ public class RippingSession implements Serializable {
         return state;
     }
 
-    public void run() throws DiscIdException, CDDBException, RipException, RippingSessionException {
+    public void run() throws DiscIdException, RipException, RippingSessionException {
         switch (state) {
             case STARTED:
                 findDiscId();
@@ -114,17 +117,22 @@ public class RippingSession implements Serializable {
         return uuid;
     }
 
-    private void findDiscId() throws DiscIdException, CDDBException, RippingSessionException, RipException {
+    private void findDiscId() throws DiscIdException, RippingSessionException, RipException {
         this.state = State.DISCIID;
         this.discIdData = new DiscId().getDiscId();
         LOGGER.info("Ripping session #" + uuid + ": discid is " + discId());
         run();
     }
 
-    private void findCddb() throws CDDBException, RipException, DiscIdException, RippingSessionException {
+    private void findCddb() throws RipException, DiscIdException, RippingSessionException {
         this.state = State.CDDB;
-        this.cddbData = new Cddb().getCddb(this.discIdData);
-        LOGGER.info("Ripping session #" + uuid + ": " + cddbData.getAlbum() + " by " + cddbData.getArtist());
+        try {
+            this.cddbData = new Cddb().getCddb(this.discIdData);
+            LOGGER.info("Ripping session #" + uuid + ": " + cddbData.getAlbum() + " by " + cddbData.getArtist());
+        } catch (CDDBException ex) {
+            this.cddbData = new CddbData(discIdData.getNbTracks());
+            LOGGER.error("Error getting cddb infos", ex);
+        }
         run();
     }
 
@@ -176,27 +184,26 @@ public class RippingSession implements Serializable {
                     final Encoder encoder = new FlacEncoder(discData, trackData, file, RipperUtils.tidyFilename(new File(rippingDir, discData.getArtist() + "-" + discData.getAlbum())));
                     executor.execute(encoder);
                 })
-                .setDiscRippedListener(new CDDiscRippedListener() {
-                    @Override
-                    public void ripped() {
-                        bus.publish("websocket", new WebsocketEvent("Ripping disc ended"));
-                    }
-                });
+                .setDiscRippedListener(() -> bus.publish("websocket", new WebsocketEvent("Ripping disc ended")));
         LOGGER.info("Ripping with " + ripper.getClass().getName());
         ripper.start(this.discIdData, this.cddbData);
         bus.publish("websocket", new WebsocketEvent("Ripping disc started"));
     }
 
-    private void getTrackMetas(final String artist, String title, String year) throws IOException {
-        List<Result> results = discogsService.search(artist, title, year);
-        if (results != null) {
-            LOGGER.info(results.toString());
-            File coverDir = new File(rippingDir, "/covers");
-            if (!coverDir.exists()) {
-                coverDir.mkdirs();
-            }
-            if (!results.isEmpty()) {
-                imageFromUrl(results.get(0).getCover_image(), coverDir.getAbsolutePath() + "/" + artist + "-" + title + ".jpg");
+    private void getTrackMetas(final String artist, final String title, final String year) throws IOException {
+        if (this.cddbData.isEmpty()) {
+            //no CD data to find cover on discogs
+        } else {
+            final List<Result> results = discogsService.search(artist, title, year);
+            if (results != null) {
+                LOGGER.info(results.toString());
+                File coverDir = new File(rippingDir, "/covers");
+                if (!coverDir.exists()) {
+                    coverDir.mkdirs();
+                }
+                if (!results.isEmpty()) {
+                    imageFromUrl(results.get(0).getCover_image(), coverDir.getAbsolutePath() + "/" + artist + "-" + title + ".jpg");
+                }
             }
         }
     }
@@ -213,17 +220,21 @@ public class RippingSession implements Serializable {
     }
 
     private void getAlbumMetas() throws IOException {
-        List<Result> results = discogsService.search(this.cddbData.getArtist(), this.cddbData.getAlbum(), this.cddbData.getYear());
-        if (results != null) {
-            LOGGER.info(results.toString());
-            File coverDir = new File(rippingDir, "/covers");
-            if (!coverDir.exists()) {
-                coverDir.mkdirs();
+        if (this.cddbData.isEmpty()) {
+            //no CD data to find cover on discogs
+        } else {
+            List<Result> results = discogsService.search(this.cddbData.getArtist(), this.cddbData.getAlbum(), this.cddbData.getYear());
+            if (results != null) {
+                LOGGER.info(results.toString());
+                File coverDir = new File(rippingDir, "/covers");
+                if (!coverDir.exists()) {
+                    coverDir.mkdirs();
+                }
+                imageFromUrl(results.get(0).getCover_image(), coverDir.getAbsolutePath() + "/" + this.cddbData.getArtist() + "-" + this.cddbData.getAlbum() + ".jpg");
             }
-            imageFromUrl(results.get(0).getCover_image(), coverDir.getAbsolutePath() + "/" + this.cddbData.getArtist() + "-" + this.cddbData.getAlbum() + ".jpg");
-        }
-        for (CddbData.Track track : this.cddbData.getTracks()) {
-            getTrackMetas(track.getArtist(), track.getTitle(), this.cddbData.getYear());
+            for (CddbData.Track track : this.cddbData.getTracks()) {
+                getTrackMetas(track.getArtist(), track.getTitle(), this.cddbData.getYear());
+            }
         }
     }
 

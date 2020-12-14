@@ -13,25 +13,25 @@ public class Cddb {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Cddb.class);
 
+    private CddbData cddbData;
+
     protected static String pad(int value) {
         return ((value > 9) ? "" : " ") + value;
     }
 
     public CddbData getCddb(final DiscIdData discIdData) throws CDDBException {
-
         try (CDDB cddb = new CDDB()) {
+            LOGGER.info("Connecting to http://gnudb.gnudb.org:8880...");
             cddb.connect("gnudb.gnudb.org", 8880);
             cddb.setTimeout(30 * 1000);
             //"1b037b03"
             //  int[] offsets = { 150, 18130, 48615 };
             //  int length = 893;
             CDDB.Entry[] entries = cddb.query(discIdData.getDiscId(), discIdData.getFrameOffsets(), discIdData.getTotalLengthInSec());
-
             if (entries == null || entries.length == 0) {
                 throw new CDDBException("No match for disc id " + discIdData.getDiscId() + ".");
-
             }
-            final CddbData cddbData = new CddbData(entries[0].cdid, entries[0].title);
+            cddbData = new CddbData(entries[0].cdid, entries[0].title);
             try {
                 CDDB.Detail detail = cddb.read(entries[0].category,
                         entries[0].cdid);
@@ -40,12 +40,7 @@ public class Cddb {
                     LOGGER.debug(pad(j) + ": " + detail.trackNames[j]);
                     cddbData.addTrack(detail.trackNames[j]);
                 }
-                LOGGER.debug("Extended data: " + detail.extendedData);
-                if (detail.extendedData.contains("YEAR:")) {
-                    int pos = detail.extendedData.indexOf("YEAR: ") + 6;
-                    cddbData.setYear(detail.extendedData.substring(pos, detail.extendedData.indexOf(' ', pos)).trim());
-                    LOGGER.debug("Detected year is " + cddbData.getYear());
-                }
+                getExtendedData(detail.extendedData);
                 for (int j = 0; j < detail.extendedTrackData.length; j++) {
                     LOGGER.debug(pad(j) + ": " + detail.extendedTrackData[j]);
                 }
@@ -54,5 +49,18 @@ public class Cddb {
             }
             return cddbData;
         }
+    }
+
+    protected void getExtendedData(String extendedData) {
+        LOGGER.debug("Extended data: " + extendedData);
+        if (extendedData.contains("YEAR:")) {
+            int pos = extendedData.indexOf("YEAR: ") + 6;
+            cddbData.setYear(extendedData.substring(pos, extendedData.indexOf(' ', pos)).trim());
+            LOGGER.debug("Detected year is " + cddbData.getYear());
+        }
+    }
+
+    public CddbData cddbData() {
+        return cddbData;
     }
 }

@@ -11,14 +11,41 @@ public class CddbData {
     private String year = "";
     private final List<Track> trackNames = new LinkedList<>();
 
-    public CddbData(String cdid, String title) {
+    public CddbData(int trackCount) {
+        this.cdid = "";
+        this.artist = "Unknown";
+        this.album = System.currentTimeMillis() + "";
+        for (int i = 0; i < trackCount; i++) {
+            trackNames.add(new Track(i, "Unknown - no title " + i));
+        }
+    }
+
+    public CddbData(final String cdid, final String title) {
+        if (cdid == null) {
+            throw new IllegalArgumentException("CddbData need a discId");
+        }
         this.cdid = cdid;
-        String[] str = title.split("/");
-        this.artist = str[0];
-        this.album = str[1];
+        if (title == null) {
+            throw new IllegalArgumentException("CddbData need a title");
+        }
+        if (!title.isEmpty()) {
+            String[] str = title.split("/");
+            this.artist = str[0];
+            this.album = str[1];
+        } else {
+            this.artist = "";
+            this.album = "";
+        }
+    }
+
+    public boolean isEmpty() {
+        return cdid.isEmpty();
     }
 
     public void addTrack(final String trackName) {
+        if (trackName == null) {
+            throw new IllegalArgumentException("You can't provide a null track");
+        }
         int index = trackNames.size();
         trackNames.add(new Track(index, trackName));
     }
@@ -47,17 +74,29 @@ public class CddbData {
         this.year = year != null ? year : "";
     }
 
+    public int getTrackCount() {
+        return trackNames.size();
+    }
+
     public static class Track {
 
         private final String index;
         private final String artist;
         private final String title;
 
-        public Track(int index, String trackName) {
-            String[] str = trackName.split("/");
-            this.index = ((index < 10) ? "0" : "") + index;
-            this.artist = str[0];
-            this.title = str[1];
+        public Track(final int index, final String trackName) {
+            this.index = (index < 10 ? "0" : "") + index;
+            if (trackName == null) {
+                throw new IllegalArgumentException("You can't provide a null track name");
+            }
+            if (!trackName.isEmpty()) {
+                String[] str = trackName.split("/");
+                this.artist = str[0];
+                this.title = str[1];
+            } else {
+                this.artist = "";
+                this.title = "";
+            }
         }
 
         public String getArtist() {
@@ -74,12 +113,10 @@ public class CddbData {
 
         @Override
         public String toString() {
-            final StringBuilder sb = new StringBuilder("Track{");
-            sb.append("index='").append(index).append('\'');
-            sb.append(", artist='").append(artist).append('\'');
-            sb.append(", title='").append(title).append('\'');
-            sb.append('}');
-            return sb.toString();
+            return "Track{" + "index='" + index + '\'' +
+                    ", artist='" + artist + '\'' +
+                    ", title='" + title + '\'' +
+                    '}';
         }
     }
 }

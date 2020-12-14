@@ -70,7 +70,7 @@ public abstract class CDRipper {
     }
 
     private void rip(final DiscIdData discIdData, final CddbData discData, final File tmpDir) {
-        LOGGER.debug("Ripping " + discData.getTracks().size() + " track to " + tmpDir.getAbsolutePath() + "...");
+        LOGGER.debug("Ripping " + discData.getTrackCount() + " track(s) to " + tmpDir.getAbsolutePath() + "...");
         status.setServiceState("RIPPING");
         status.setDiscArtist(discData.getArtist());
         status.setDiscTitle(discData.getAlbum());
