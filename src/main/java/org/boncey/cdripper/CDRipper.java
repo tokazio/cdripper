@@ -89,14 +89,13 @@ public abstract class CDRipper {
                 status.setTrackTitle(trackData.getTitle());
 
 
-                final float maxReadPos = discIdData.getFrameLenOf(status.getTrackId()) * 1500;
+                final float maxReadPos = discIdData.getFrameLenOf(status.getTrackId()) * 1500;// - discIdData.getFrameLenOf(status.getTrackId()-1) * 1500;
 
                 LOGGER.debug("Reading track #" + status.getTrackId() + " to pos " + maxReadPos);
 
                 if (trackRippinglistener != null) {
                     trackRippinglistener.started(status);
                 }
-
                 cdparanoia = new CDParanoia()
                         .verbose()
                         .neverSkip(0)

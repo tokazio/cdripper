@@ -19,7 +19,6 @@ public class DiscIdDataTest {
         assertThat(discIdData.getNbTracks()).isEqualTo(15);
         assertThat(discIdData.getTotalLengthInSec()).isEqualTo(4272);
         assertThat(discIdData.getFrameOffsets()).hasSize(15);
-
-
     }
+
 }

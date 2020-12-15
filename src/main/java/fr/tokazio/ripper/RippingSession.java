@@ -157,7 +157,6 @@ public class RippingSession implements Serializable {
     private void rip() throws RipException {
         this.state = State.RIPPING_STARTED;
 
-
         if (OS.isMac()) {
             rippingDir = new File("/users/romain/audio");
         } else {

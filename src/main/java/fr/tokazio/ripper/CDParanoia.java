@@ -57,6 +57,98 @@ public class CDParanoia {
         return this;
     }
 
+    public List<TrackData> query() throws IOException, InterruptedException, ProcException {
+        final ProcessBuilder pb = new ProcessBuilder("cdparanoia", "-Q");
+        StringBuilder sbQ = new StringBuilder();
+        Process procQ = pb.start();
+        Thread t1 = new Thread() {
+            public void run() {
+                final BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                while (procQ.isAlive()) {
+                    String line = "";
+                    try {
+                        while ((line = reader.readLine()) != null) {
+                            sbQ.append(line);
+                            LOGGER.debug(line);
+                        }
+                    } catch (IOException ex) {
+                        LOGGER.warn("Error reading ripping process output", ex);
+                    }
+                }
+            }
+        };
+        t1.setDaemon(true);
+        procQ.waitFor();
+        t1.interrupt();
+        if (procQ.exitValue() != 0) {
+            throw new ProcException(procQ.exitValue(), sbQ.toString());
+        }
+        /*
+        cdparanoia III release 10.2 (September 11, 2008)
+
+track_num = 160 start sector 4350 msf: 1,0,0
+track_num = 161 start sector 107850 msf: 24,0,0
+track_num = 162 start sector 330642 msf: 73,30,42
+track_num = 1 start sector 0 msf: 0,2,0
+track_num = 2 start sector 4777 msf: 1,5,52
+track_num = 3 start sector 22585 msf: 5,3,10
+track_num = 4 start sector 42932 msf: 9,34,32
+track_num = 5 start sector 57150 msf: 12,44,0
+track_num = 6 start sector 72070 msf: 16,2,70
+track_num = 7 start sector 88362 msf: 19,40,12
+track_num = 8 start sector 105290 msf: 23,25,65
+track_num = 9 start sector 118987 msf: 26,28,37
+track_num = 10 start sector 134922 msf: 30,0,72
+track_num = 11 start sector 149090 msf: 33,9,65
+track_num = 12 start sector 164567 msf: 36,36,17
+track_num = 13 start sector 169595 msf: 37,43,20
+track_num = 14 start sector 185380 msf: 41,13,55
+track_num = 15 start sector 202267 msf: 44,58,67
+track_num = 16 start sector 212790 msf: 47,19,15
+track_num = 17 start sector 226995 msf: 50,28,45
+track_num = 18 start sector 239875 msf: 53,20,25
+track_num = 19 start sector 253197 msf: 56,17,72
+track_num = 20 start sector 276497 msf: 61,28,47
+track_num = 21 start sector 291592 msf: 64,49,67
+track_num = 22 start sector 299282 msf: 66,32,32
+track_num = 23 start sector 302995 msf: 67,21,70
+track_num = 24 start sector 312430 msf: 69,27,55
+
+Table of contents (audio tracks only):
+track        length               begin        copy pre ch
+===========================================================
+  1.     4777 [01:03.52]        0 [00:00.00]    no   no  2
+  2.    17808 [03:57.33]     4777 [01:03.52]    no   no  2
+  3.    20347 [04:31.22]    22585 [05:01.10]    no   no  2
+  4.    14218 [03:09.43]    42932 [09:32.32]    no   no  2
+  5.    14920 [03:18.70]    57150 [12:42.00]    no   no  2
+  6.    16292 [03:37.17]    72070 [16:00.70]    no   no  2
+  7.    16928 [03:45.53]    88362 [19:38.12]    no   no  2
+  8.    13697 [03:02.47]   105290 [23:23.65]    no   no  2
+  9.    15935 [03:32.35]   118987 [26:26.37]    no   no  2
+ 10.    14168 [03:08.68]   134922 [29:58.72]    no   no  2
+ 11.    15477 [03:26.27]   149090 [33:07.65]    no   no  2
+ 12.     5028 [01:07.03]   164567 [36:34.17]    no   no  2
+ 13.    15785 [03:30.35]   169595 [37:41.20]    no   no  2
+ 14.    16887 [03:45.12]   185380 [41:11.55]    no   no  2
+ 15.    10523 [02:20.23]   202267 [44:56.67]    no   no  2
+ 16.    14205 [03:09.30]   212790 [47:17.15]    no   no  2
+ 17.    12880 [02:51.55]   226995 [50:26.45]    no   no  2
+ 18.    13322 [02:57.47]   239875 [53:18.25]    no   no  2
+ 19.    23300 [05:10.50]   253197 [56:15.72]    no   no  2
+ 20.    15095 [03:21.20]   276497 [61:26.47]    no   no  2
+ 21.     7690 [01:42.40]   291592 [64:47.67]    no   no  2
+ 22.     3713 [00:49.38]   299282 [66:30.32]    no   no  2
+ 23.     9435 [02:05.60]   302995 [67:19.70]    no   no  2
+ 24.    18212 [04:02.62]   312430 [69:25.55]    no   no  2
+TOTAL  330642 [73:28.42]    (audio only)
+
+         */
+        List<TrackData> out = new LinkedList<>();
+
+        return out;
+    }
+
     private String run() throws IOException, InterruptedException, ProcException {
         final String[] cmd = args.toArray(new String[0]);
         LOGGER.info("Ripping command: " + Arrays.toString(cmd));

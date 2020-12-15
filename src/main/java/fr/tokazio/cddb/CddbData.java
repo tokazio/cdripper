@@ -16,7 +16,7 @@ public class CddbData {
         this.artist = "Unknown";
         this.album = System.currentTimeMillis() + "";
         for (int i = 0; i < trackCount; i++) {
-            trackNames.add(new Track(i, "Unknown - no title " + i));
+            trackNames.add(new Track(i, ""));
         }
     }
 
@@ -94,8 +94,8 @@ public class CddbData {
                 this.artist = str[0];
                 this.title = str[1];
             } else {
-                this.artist = "";
-                this.title = "";
+                this.artist = "Unknown artist";
+                this.title = "no title " + index;
             }
         }
 

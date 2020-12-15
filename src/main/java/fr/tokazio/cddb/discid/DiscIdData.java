@@ -9,6 +9,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+/**
+ * @link https://linux.die.net/man/1/cd-discid
+ */
 public class DiscIdData implements Serializable {
 
     @JsonIgnore
@@ -63,9 +66,4 @@ public class DiscIdData implements Serializable {
         return totalLengthInSec;
     }
 
-    public int getFrameLenOf(int trackId) {
-        int len = frameOffsets[trackId] - frameOffsets[trackId - 1];
-        LOGGER.debug("Track #" + trackId + " from " + frameOffsets[trackId - 1] + " to " + frameOffsets[trackId] + "(len " + len + ")");
-        return len;
-    }
 }
